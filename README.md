@@ -29,8 +29,8 @@
   ```
 
   ### Howto: Implement this driver into Android kernel (NetHunter)
-  This driver uses binaries instead of building as a kernel module, that makes it quite a bit
-  easier to handle both for users and for the kernel.
+  This driver uses binaries instead of building as a kernel module,
+  that makes it quite a bit easier to handle both for users and for the kernel.
 
   ```sh
   * Copy driver folder to 'kernel/drivers/net/wireless/realtek/
@@ -55,8 +55,6 @@
 
   Please report issues (if you encounter any), open a issue report with as much details/logs
   as possible.
-
-
 
 
 
