@@ -360,11 +360,9 @@ void rtl8188eu_config_channel(struct ieee80211_hw *hw)
 
 	switch (hw->conf.chandef.width) {
 	case NL80211_CHAN_WIDTH_20_NOHT:
-		// Note: fall through here is INTENTIONAL
 		ht = false;
-		// Note: fall through here is INTENTIONAL
+		/* fall through */
 	case NL80211_CHAN_WIDTH_20:
-		// Note: fall through here is INTENTIONAL
 		opmode |= BW_OPMODE_20MHZ;
 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
 
