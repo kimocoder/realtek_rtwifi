@@ -1,6 +1,7 @@
 
 
   ## Realtek WiFi - EXPERIMENTAL driver
+  This driver currently supports these chipsets: Realtek 8188e 8192e 8192c 8723a and 8723b 
 
   [![GitHub issues](https://img.shields.io/github/issues/kimocoder/realtek_wifi.svg)](https://github.com/kimocoder/realtek_wifi/issues)
   [![GitHub forks](https://img.shields.io/github/forks/kimocoder/realtek_wifi.svg)](https://github.com/kimocoder/realtek_wifi/network)
@@ -19,6 +20,14 @@
   * Newest mac80211
   * Channel width
 ```
+
+  ### Howto: Download & Install
+  ```
+  $ git clone https://github.com/kimocoder/realtek_wifi
+  $ cd realtek_wifi
+  $ make && make install
+  ```
+
 
 
 
