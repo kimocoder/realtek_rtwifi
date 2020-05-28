@@ -7,9 +7,23 @@
   [![GitHub stars](https://img.shields.io/github/stars/kimocoder/realtek_wifi.svg)](https://github.com/kimocoder/realtek_wifi/stargazers)
 
 
+  ### Driver supports
+  ```
+  * WPA3-SAE
+  * MESH (HT-IBSS) mode
+  * AP mode
+  * P2P mode
+  * Monitor mode
+  * Frame injection (packet injection)
+  * Virtual interfaces (VIF)
+  * Newest mac80211
+  * Channel width
+```
 
-  Please report issues (if you encounter any) in an issue report at
-  https://github.com/kimocoder/realtek_wifi
+
+
+  Please report issues (if you encounter any) open a issue report with so much details/logs
+  as possible, in order to debug the issue.
 
 
 
@@ -22,5 +36,5 @@
 
 
 
-  ## More information is coming up shortly .. thanks!
+  ## More information is coming up with time .. thanks!
  
