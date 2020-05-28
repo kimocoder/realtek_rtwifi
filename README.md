@@ -9,7 +9,7 @@
 
 
   ### Driver supports
-  ```
+  ```sh
   * WPA3-SAE
   * MESH (HT-IBSS) mode
   * AP mode
@@ -22,11 +22,33 @@
 ```
 
   ### Howto: Download & Install
-  ```
+  ```sh
   $ git clone https://github.com/kimocoder/realtek_wifi
   $ cd realtek_wifi
   $ make && make install
   ```
+
+  ### Howto: Implement this driver into Android kernel (NetHunter)
+  This driver uses binaries instead of building as a kernel module, that makes it quite a bit
+  easier to handle both for users and for the kernel.
+
+  ```sh
+  * Copy driver folder to 'kernel/drivers/net/wireless/realtek/
+  * Open the Makefile in vim/nano, eg: vim drivers/net/wireless/realtek/Makefile
+  
+    Then add:
+    '"obj-$(CONFIG_RTL8XXXU) += rtl8xxxu/" in the bottom.'
+    
+  * Step two, eg: vim drivers/net/wireless/realtek/Kconfig
+    
+    Then add:
+    'source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"' at bottom.
+    
+    Compile kernel and the driver should be available in 'make menuconfig'
+    also, in between all the other options in there. Pretty simple.
+  ```
+
+
 
 
 
