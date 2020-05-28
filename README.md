@@ -65,5 +65,5 @@
 
 
 
-  ## More information is coming up with time .. thanks!
+  ## More information is coming with time .. stay tuned & enjoy!
  
