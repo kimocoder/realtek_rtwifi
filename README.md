@@ -22,8 +22,8 @@
 
 
 
-  Please report issues (if you encounter any) open a issue report with so much details/logs
-  as possible, in order to debug the issue.
+  Please report issues (if you encounter any), open a issue report with as much details/logs
+  as possible.
 
 
 
