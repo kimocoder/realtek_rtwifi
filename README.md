@@ -21,6 +21,14 @@
   * Channel width
 ```
 
+  ### Howto: Download & Install
+  ```
+  $ git clone https://github.com/kimocoder/realtek_wifi
+  $ cd realtek_wifi
+  $ make && make install
+  ```
+
+
 
 
   Please report issues (if you encounter any), open a issue report with as much details/logs
