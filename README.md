@@ -1,6 +1,6 @@
 
 
-  ## Realtek WiFi - EXPERIMENTAL driver
+  ## Realtek RTWIFI - "Custom / development" driver
   This driver currently supports these chipsets: Realtek 8188e 8192e 8192c 8723a and 8723b 
 
   [![kali](https://img.shields.io/badge/kali-supported-blue.svg)](https://www.kali.org)
