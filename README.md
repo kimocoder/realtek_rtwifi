@@ -28,6 +28,7 @@
   * Add more upstream patches
   * Enhance the Makefile
   * Add DKMS
+  * Clean with checkpatch
 ```
 
 
