@@ -1,19 +1,19 @@
-obj-$(CONFIG_RTL8XXXU)	+= rtl8xxxu.o
+obj-$(CONFIG_RTL8XXXU)	+= rtwifi.o
 
-rtl8xxxu-y	:= rtl8xxxu_core.o rtl8xxxu_8192e.o rtl8xxxu_8723b.o \
+rtwifi-y	:= rtl8xxxu_core.o rtl8xxxu_8192e.o rtl8xxxu_8723b.o \
 		   rtl8xxxu_8723a.o rtl8xxxu_8192c.o rtl8xxxu_8188e.o
 
 
-KVER  := $(shell uname -r)
+KVER := $(shell uname -r)
 KSRC := /lib/modules/$(KVER)/build
-MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/realtek/rtl8xxxu
+MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/realtek/rtwifi
 
 all: modules
 
 modules:
 	$(MAKE) -C $(KSRC) M=$(shell pwd) modules
 
-MODULE_NAME = rtl8xxxu
+MODULE_NAME = rtwifi
 
 install: modules
 	gzip -f $(MODULE_NAME).ko

@@ -31,6 +31,9 @@
 
   ### TODO
   ```sh
+  * Separate the module name from kernels rtl8xxxu
+    we don't wan't them to collide :/
+
   * Add more VID/PIDs
   * Add more upstream patches
   * Enhance the Makefile
@@ -55,12 +58,12 @@
   * Open the Makefile in vim/nano, eg: vim drivers/net/wireless/realtek/Makefile
   
     Then add:
-    '"obj-$(CONFIG_RTL8XXXU) += rtl8xxxu/" in the bottom.'
+    '"obj-$(CONFIG_RTL8XXXU) += rtwifi/" in the bottom.'
     
   * Step two, eg: vim drivers/net/wireless/realtek/Kconfig
     
     Then add:
-    'source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"' at bottom.
+    'source "drivers/net/wireless/realtek/rtwifi/Kconfig"' at bottom.
     
     Compile kernel and the driver should be available in 'make menuconfig'
     also, in between all the other options in there. Pretty simple.
