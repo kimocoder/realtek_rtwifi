@@ -11,7 +11,7 @@
   ### Driver supports
   ```sh
   * WPA3-SAE
-  * MESH (HT-IBSS) mode
+  * MESH mode
   * AP mode
   * P2P mode
   * Monitor mode
@@ -20,6 +20,16 @@
   * Newest mac80211
   * Channel width
 ```
+
+
+  ### TODO
+  ```sh
+  * Add more VID/PIDs
+  * Add more upstream patches
+  * Enhance the Makefile
+  * Add DKMS
+```
+
 
   ### Howto: Download & Install
   ```sh
