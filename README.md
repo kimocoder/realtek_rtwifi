@@ -44,7 +44,7 @@
 
   ### Howto: Download & Install
   ```sh
-  $ git clone https://github.com/kimocoder/realtek_wifi
+  $ git clone https://github.com/kimocoder/realtek_rtwifi
   $ cd realtek_wifi
   $ make && make install
   ```
