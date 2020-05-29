@@ -3,9 +3,16 @@
   ## Realtek WiFi - EXPERIMENTAL driver
   This driver currently supports these chipsets: Realtek 8188e 8192e 8192c 8723a and 8723b 
 
+  [![kali](https://img.shields.io/badge/kali-supported-blue.svg)](https://www.kali.org)
+  [![NetHunter](https://img.shields.io/badge/nethunter-supported-blue.svg)](https://nethunter.com)
+  [![aircrack-ng](https://img.shields.io/badge/aircrack--ng-supported-blue.svg)](https://github.com/aircrack-ng/aircrack-ng)
+  [![wifite2](https://img.shields.io/badge/wifite2-supported-blue.svg)](https://github.com/kimocoder/wifite2)
+  <br>
   [![GitHub issues](https://img.shields.io/github/issues/kimocoder/realtek_wifi.svg)](https://github.com/kimocoder/realtek_wifi/issues)
   [![GitHub forks](https://img.shields.io/github/forks/kimocoder/realtek_wifi.svg)](https://github.com/kimocoder/realtek_wifi/network)
   [![GitHub stars](https://img.shields.io/github/stars/kimocoder/realtek_wifi.svg)](https://github.com/kimocoder/realtek_wifi/stargazers)
+  [![GitHub license](https://img.shields.io/github/license/aircrack-ng/rtl8812au.svg)](https://github.com/aircrack-ng/rtl8812au/blob/master/LICENSE)
+  [![GitHub version](https://raster.shields.io/badge/version-BETA-lightgrey.svg)](#)
 
 
   ### Driver supports
