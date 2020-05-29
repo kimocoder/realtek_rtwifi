@@ -46,7 +46,7 @@
   ```sh
   $ git clone https://github.com/kimocoder/realtek_rtwifi
   $ cd realtek_wifi
-  $ make && make install
+  $ make && insmod rtwifi.ko (not make install right now)
   ```
 
   ### Howto: Implement this driver into Android kernel (NetHunter)
