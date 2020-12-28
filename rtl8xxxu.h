@@ -1241,18 +1241,27 @@ struct rtl8723bu_c2h {
 		} __packed bt_info;
 		struct {
 			u8 rate:7;
-			u8 dummy0_0:1;
+			u8 sgi:1;
 			u8 macid;
 			u8 ldpc:1;
 			u8 txbf:1;
 			u8 noisy_state:1;
 			u8 dummy2_0:5;
 			u8 dummy3_0;
+			u8 dummy4_0;
+			u8 dummy5_0;
+			u8 bw;
 		} __packed ra_report;
 	};
 };
 
 struct rtl8xxxu_fileops;
+
+struct rtl8xxxu_ra_report {
+	struct rate_info txrate;
+	u32 bit_rate;
+	u8 desc_rate;
+};
 
 struct rtl8xxxu_priv {
 	struct ieee80211_hw *hw;
@@ -1359,6 +1368,7 @@ struct rtl8xxxu_priv {
 	u8 pi_enabled:1;
 	u8 no_pape:1;
 	u8 int_buf[USB_INTR_CONTENT_LENGTH];
+	struct rtl8xxxu_ra_report ra_report;
 };
 
 struct rtl8xxxu_rx_urb {

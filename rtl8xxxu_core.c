@@ -1265,7 +1265,7 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 {
 	struct rtl8xxxu_priv *priv = hw->priv;
-	u32 val32, rsr;
+	u32 val32;
 	u8 val8, subchannel;
 	u16 rf_mode_bw;
 	bool ht = true;
@@ -1274,7 +1274,6 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 
 	rf_mode_bw = rtl8xxxu_read16(priv, REG_WMAC_TRXPTCL_CTL);
 	rf_mode_bw &= ~WMAC_TRXPTCL_CTL_BW_MASK;
-	rsr = rtl8xxxu_read32(priv, REG_RESPONSE_RATE_SET);
 	channel = hw->conf.chandef.chan->hw_value;
 
 /* Hack */
@@ -6021,6 +6020,35 @@ static void rtl8xxxu_stop(struct ieee80211_hw *hw)
 	rtl8xxxu_free_tx_resources(priv);
 }
 
+static struct ieee80211_rate rtl8xxxu_legacy_ratetable[] = {
+	{.bitrate = 10, .hw_value = 0x00,},
+	{.bitrate = 20, .hw_value = 0x01,},
+	{.bitrate = 55, .hw_value = 0x02,},
+	{.bitrate = 110, .hw_value = 0x03,},
+	{.bitrate = 60, .hw_value = 0x04,},
+	{.bitrate = 90, .hw_value = 0x05,},
+	{.bitrate = 120, .hw_value = 0x06,},
+	{.bitrate = 180, .hw_value = 0x07,},
+	{.bitrate = 240, .hw_value = 0x08,},
+	{.bitrate = 360, .hw_value = 0x09,},
+	{.bitrate = 480, .hw_value = 0x0a,},
+	{.bitrate = 540, .hw_value = 0x0b,},
+};
+
+static void rtl8xxxu_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss)
+{
+	if (rate <= DESC_RATE_54M)
+		return;
+
+	if (rate >= DESC_RATE_MCS0 && rate <= DESC_RATE_MCS15) {
+		if (rate < DESC_RATE_MCS8)
+			*nss = 1;
+		else
+			*nss = 2;
+		*mcs = rate - DESC_RATE_MCS0;
+	}
+}
+
 static const struct ieee80211_ops rtl8xxxu_ops = {
 	.tx = rtl8xxxu_tx,
 	.add_interface = rtl8xxxu_add_interface,
@@ -6139,7 +6167,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 		}
 		break;
 	case 0x7392:
-		if (id->idProduct == 0x7811)
+		if (id->idProduct == 0x7811 || id->idProduct == 0xa611)
 			untested = 0;
 		break;
 	case 0x050d:
@@ -6344,6 +6372,8 @@ static const struct usb_device_id dev_table[] = {
 {USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0109, 0xff, 0xff, 0xff),
 	.driver_info = (unsigned long)&rtl8192eu_fops},
 {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0xb720, 0xff, 0xff, 0xff),
+	.driver_info = (unsigned long)&rtl8723bu_fops},
+{USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0xa611, 0xff, 0xff, 0xff),
 	.driver_info = (unsigned long)&rtl8723bu_fops},
 {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8179, 0xff, 0xff, 0xff),
 	.driver_info = (unsigned long)&rtl8188eu_fops},
