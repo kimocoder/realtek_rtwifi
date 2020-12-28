@@ -17,6 +17,7 @@
 
   ### Driver supports
   ```sh
+  * MAC80211 STACK
   * WPA3-SAE
   * MESH mode
   * AP mode
@@ -24,7 +25,6 @@
   * Monitor mode
   * Frame injection (packet injection)
   * Virtual interfaces (VIF)
-  * Newest mac80211
   * Channel width
 ```
 
@@ -36,7 +36,7 @@
 
   * Add more VID/PIDs
   * Add more upstream patches
-  * Enhance the Makefile
+  * Enhance the Makefile (w.i.p)
   * Add DKMS
   * Clean with checkpatch
 ```
@@ -46,7 +46,7 @@
   ```sh
   $ git clone https://github.com/kimocoder/realtek_rtwifi
   $ cd realtek_wifi
-  $ make && insmod rtwifi.ko (not make install right now)
+  $ make && make install (or 'insmod rtwifi.ko' if so)
   ```
 
   ### Howto: Implement this driver into Android kernel (NetHunter)
