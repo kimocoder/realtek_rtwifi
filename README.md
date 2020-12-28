@@ -69,22 +69,50 @@
     also, in between all the other options in there. Pretty simple.
   ```
 
+### Module information / showcase
 
-
-
-
-
-  Please report issues (if you encounter any), open a issue report with as much details/logs
-  as possible.
-
-
-
-
-
-
-
-
-
-
-  ## More information is coming with time .. stay tuned & enjoy!
- 
+  ```sh
+root@kali:~# modinfo rtwifi
+filename:       /lib/modules/5.9.0-kali5-amd64/kernel/drivers/net/wireless/realtek/rtwifi.ko
+firmware:       rtlwifi/rtl8723bu_bt.bin
+firmware:       rtlwifi/rtl8723bu_nic.bin
+firmware:       rtlwifi/rtl8192eu_nic.bin
+firmware:       rtlwifi/rtl8192cufw_TMSC.bin
+firmware:       rtlwifi/rtl8192cufw_B.bin
+firmware:       rtlwifi/rtl8192cufw_A.bin
+firmware:       rtlwifi/rtl8188eufw.bin
+firmware:       rtlwifi/rtl8723aufw_B_NoBT.bin
+firmware:       rtlwifi/rtl8723aufw_B.bin
+firmware:       rtlwifi/rtl8723aufw_A.bin
+license:        GPL
+description:    RTL8XXXu USB mac80211 Wireless LAN Driver
+author:         Christian <kimocoder> B. <christian@aircrack-ng.org>
+alias:          usb:v2001p3311d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0DF6p0076d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp8179d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp0179d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp8179d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v7392pA611d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDApB720d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v2357p0109d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v2001p3319d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v2357p0108d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v2357p0107d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp818Bd*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp0724d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp1724d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp8724d*dc*dsc*dp*icFFiscFFipFFin*
+depends:        mac80211,usbcore
+retpoline:      Y
+name:           rtwifi
+vermagic:       5.9.0-kali5-amd64 SMP mod_unload modversions 
+parm:           debug:Set debug mask (int)
+parm:           ht40_2g:Enable HT40 support on the 2.4GHz band (bool)
+parm:           dma_aggregation:Enable DMA packet aggregation (bool)
+parm:           dma_agg_timeout:Set DMA aggregation timeout (range 1-127) (int)
+parm:           dma_agg_pages:Set DMA aggregation pages (range 1-127, 0 to disable) (int)
+root@kali:~#
+  ```
+  
+  
+  
