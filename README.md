@@ -49,6 +49,33 @@
   $ make && make install (or 'insmod rtwifi.ko' if so)
   ```
 
+  ### Capabilities / functionalities
+  ```sh
+  
+  * Monitor mode & frame injection caoabilities is needed for penetration testing
+    e.g Kali Linux / NetHunter so on. 
+  
+  $ airmon-ng 
+
+PHY     Interface       Driver          Chipset
+
+phy1    wlan1           rtl8xxxu        Realtek Semiconductor Corp. RTL8188EUS 802.11n Wireless Network Adapter
+phy2    wlan2           mt76x0u         MediaTek Inc. WiFi
+
+$ aireplay-ng -9 wlan1
+21:19:38  Trying broadcast probe requests...
+21:19:39  Injection is working!
+21:19:39  Found 1 AP 
+
+21:19:39  Trying directed probe requests...
+21:19:39  xx:xx:80:xx:6A:xx - channel: 11 - 'NextGenTel_xAx2'
+21:19:40  Ping (min/avg/max): 0.987ms/1.735ms/5.565ms Power: -90.80
+21:19:40  30/30: 100%
+
+  
+  ```
+
+
   ### Howto: Implement this driver into Android kernel (NetHunter)
   This driver uses binaries instead of building as a kernel module,
   that makes it quite a bit easier to handle both for users and for the kernel.
