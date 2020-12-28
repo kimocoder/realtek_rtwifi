@@ -1,7 +1,7 @@
 
 
-  ## Realtek RTWIFI - standalone build driver
-  This driver currently supports these chipsets: Realtek 8188e 8192e 8192c 8723a and 8723b 
+  ## Realtek RTWIFI - standalone mac80211 driver w/good driver support
+  This driver currently supports these chipsets: Realtek 8188e(us) 8192e 8192c 8723a and 8723b 
 
   [![kali](https://img.shields.io/badge/kali-supported-blue.svg)](https://www.kali.org)
   [![NetHunter](https://img.shields.io/badge/nethunter-supported-blue.svg)](https://nethunter.com)
