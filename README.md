@@ -221,6 +221,13 @@ $ aireplay-ng -9 wlan1
 21:19:40  30/30: 100%
 
   
+
+$ hcxdumptool -i wlan0 --check_injection
+initialization...
+interface is already in monitor mode
+starting packet injection test (that can take up to two minutes)...
+packet injection is working!
+ratio: 20 to 8  
   ```
 
 
