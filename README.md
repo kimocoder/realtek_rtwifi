@@ -26,6 +26,11 @@
   * Frame injection (packet injection)
   * Virtual interfaces (VIF)
   * Channel width
+  
+  Needs to be tested:
+  * Hostapd support
+  * WiFi Direct
+  * IPerf3 test
 ```
 
 
@@ -36,7 +41,7 @@
 
   * Add more VID/PIDs
   * Add more upstream patches
-  * Enhance the Makefile (w.i.p)
+  * Enhance the Makefile
   * Add DKMS
   * Clean with checkpatch
 ```
