@@ -15,6 +15,14 @@
   [![GitHub version](https://raster.shields.io/badge/version-BETA-lightgrey.svg)](#)
 
 
+  ### Important to know
+  ```sh
+  It's important to 'blacklist' the '8188eu','r8188eu' and the 'rtl8xxxu' in /etc/modprobe.d
+  Just add a file 'nano /etc/modprobe.d/realtek.conf and put "blaklist <driver>" on separat lines below.
+  
+  The kernel mainline has one driver named r8188eu.ko and aircrack-ng used 8188eu.ko for the older stack.
+  ```
+
   ### Driver support (fully detailed)
   ```sh
   The driver supports 'monitor mode' and 'frame injection' capabilities,
