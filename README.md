@@ -17,6 +17,7 @@
 
   ### Driver supports
   ```sh
+  * MAC80211 STACK
   * WPA3-SAE
   * MESH mode
   * AP mode
@@ -24,7 +25,6 @@
   * Monitor mode
   * Frame injection (packet injection)
   * Virtual interfaces (VIF)
-  * Newest mac80211
   * Channel width
 ```
 
@@ -36,7 +36,7 @@
 
   * Add more VID/PIDs
   * Add more upstream patches
-  * Enhance the Makefile
+  * Enhance the Makefile (w.i.p)
   * Add DKMS
   * Clean with checkpatch
 ```
@@ -46,8 +46,35 @@
   ```sh
   $ git clone https://github.com/kimocoder/realtek_rtwifi
   $ cd realtek_wifi
-  $ make && insmod rtwifi.ko (not make install right now)
+  $ make && make install (or 'insmod rtwifi.ko' if so)
   ```
+
+  ### Capabilities / functionalities
+  ```sh
+  
+  * Monitor mode & frame injection caoabilities is needed for penetration testing
+    e.g Kali Linux / NetHunter so on. 
+  
+  $ airmon-ng 
+
+PHY     Interface       Driver          Chipset
+
+phy1    wlan1           rtl8xxxu        Realtek Semiconductor Corp. RTL8188EUS 802.11n Wireless Network Adapter
+phy2    wlan2           mt76x0u         MediaTek Inc. WiFi
+
+$ aireplay-ng -9 wlan1
+21:19:38  Trying broadcast probe requests...
+21:19:39  Injection is working!
+21:19:39  Found 1 AP 
+
+21:19:39  Trying directed probe requests...
+21:19:39  xx:xx:80:xx:6A:xx - channel: 11 - 'NextGenTel_xAx2'
+21:19:40  Ping (min/avg/max): 0.987ms/1.735ms/5.565ms Power: -90.80
+21:19:40  30/30: 100%
+
+  
+  ```
+
 
   ### Howto: Implement this driver into Android kernel (NetHunter)
   This driver uses binaries instead of building as a kernel module,
@@ -69,22 +96,50 @@
     also, in between all the other options in there. Pretty simple.
   ```
 
+### Module information / showcase
 
-
-
-
-
-  Please report issues (if you encounter any), open a issue report with as much details/logs
-  as possible.
-
-
-
-
-
-
-
-
-
-
-  ## More information is coming with time .. stay tuned & enjoy!
- 
+  ```sh
+root@kali:~# modinfo rtwifi
+filename:       /lib/modules/5.9.0-kali5-amd64/kernel/drivers/net/wireless/realtek/rtwifi.ko
+firmware:       rtlwifi/rtl8723bu_bt.bin
+firmware:       rtlwifi/rtl8723bu_nic.bin
+firmware:       rtlwifi/rtl8192eu_nic.bin
+firmware:       rtlwifi/rtl8192cufw_TMSC.bin
+firmware:       rtlwifi/rtl8192cufw_B.bin
+firmware:       rtlwifi/rtl8192cufw_A.bin
+firmware:       rtlwifi/rtl8188eufw.bin
+firmware:       rtlwifi/rtl8723aufw_B_NoBT.bin
+firmware:       rtlwifi/rtl8723aufw_B.bin
+firmware:       rtlwifi/rtl8723aufw_A.bin
+license:        GPL
+description:    RTL8XXXu USB mac80211 Wireless LAN Driver
+author:         Christian <kimocoder> B. <christian@aircrack-ng.org>
+alias:          usb:v2001p3311d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0DF6p0076d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp8179d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp0179d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp8179d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v7392pA611d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDApB720d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v2357p0109d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v2001p3319d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v2357p0108d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v2357p0107d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp818Bd*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp0724d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp1724d*dc*dsc*dp*icFFiscFFipFFin*
+alias:          usb:v0BDAp8724d*dc*dsc*dp*icFFiscFFipFFin*
+depends:        mac80211,usbcore
+retpoline:      Y
+name:           rtwifi
+vermagic:       5.9.0-kali5-amd64 SMP mod_unload modversions 
+parm:           debug:Set debug mask (int)
+parm:           ht40_2g:Enable HT40 support on the 2.4GHz band (bool)
+parm:           dma_aggregation:Enable DMA packet aggregation (bool)
+parm:           dma_agg_timeout:Set DMA aggregation timeout (range 1-127) (int)
+parm:           dma_agg_pages:Set DMA aggregation pages (range 1-127, 0 to disable) (int)
+root@kali:~#
+  ```
+  
+  
+  
