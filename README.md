@@ -17,6 +17,12 @@
 
   ### Driver support (fully detailed)
   ```sh
+  The driver supports 'monitor mode' and 'frame injection' capabilities,
+  often needed for penetration testing abilities. Besides that, it has good support as it's
+  an MAC80211 driver rather than NL80211/CFG80211. AP/MESH/MANAGED/MONITOR support, WPA3-SAE,
+  Virtual Interfaces (VIF), TX power control, P2P suitie is supported.
+  
+  
           wiphy index: 6
         max # scan SSIDs: 4
         max scan IEs length: 2257 bytes
