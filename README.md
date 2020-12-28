@@ -1,7 +1,7 @@
 
 
-  ## Realtek RTWIFI - standalone build driver
-  This driver currently supports these chipsets: Realtek 8188e 8192e 8192c 8723a and 8723b 
+  ## Realtek RTWIFI - standalone mac80211 driver w/good support
+  This driver currently supports these chipsets: Realtek 8188e(us) 8192e 8192c 8723a and 8723b 
 
   [![kali](https://img.shields.io/badge/kali-supported-blue.svg)](https://www.kali.org)
   [![NetHunter](https://img.shields.io/badge/nethunter-supported-blue.svg)](https://nethunter.com)
@@ -20,7 +20,7 @@
   The driver supports 'monitor mode' and 'frame injection' capabilities,
   often needed for penetration testing abilities. Besides that, it has good support as it's
   an MAC80211 driver rather than NL80211/CFG80211. AP/MESH/MANAGED/MONITOR support, WPA3-SAE,
-  Virtual Interfaces (VIF), TX power control, P2P suitie is supported.
+  Virtual Interfaces (VIF), TX power control, P2P commands etc.
   
   
           wiphy index: 6
@@ -221,6 +221,13 @@ $ aireplay-ng -9 wlan1
 21:19:40  30/30: 100%
 
   
+
+$ hcxdumptool -i wlan0 --check_injection
+initialization...
+interface is already in monitor mode
+starting packet injection test (that can take up to two minutes)...
+packet injection is working!
+ratio: 20 to 8  
   ```
 
 
