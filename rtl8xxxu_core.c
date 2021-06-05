@@ -40,6 +40,8 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
+#include <linux/version.h>
+
 #define DRIVER_NAME "rtl8xxxu"
 
 int rtl8xxxu_debug = RTL8XXXU_DEBUG_EFUSE;
@@ -5158,8 +5160,10 @@ static void rtl8xxxu_rx_parse_phystats(struct rtl8xxxu_priv *priv,
 				       struct rtl8723au_phy_stats *phy_stats,
 				       u32 rxmcs)
 {
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,12)
 	if (phy_stats->sgi_en)
 		rx_status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
+#endif
 
 	if (rxmcs < DESC_RATE_6M) {
 		/*
@@ -5384,11 +5388,16 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 			rx_status->flag |= RX_FLAG_DECRYPTED;
 		if (rx_desc->crc32)
 			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,12)
 		if (rx_desc->bw)
 			rx_status->bw = RATE_INFO_BW_40;
+#endif
 
 		if (rx_desc->rxht) {
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,12)
 			rx_status->encoding = RX_ENC_HT;
+#endif
 			rx_status->rate_idx = rx_desc->rxmcs - DESC_RATE_MCS0;
 		} else {
 			rx_status->rate_idx = rx_desc->rxmcs;
@@ -5454,11 +5463,17 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 		rx_status->flag |= RX_FLAG_DECRYPTED;
 	if (rx_desc->crc32)
 		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,12)
 	if (rx_desc->bw)
 		rx_status->bw = RATE_INFO_BW_40;
+#endif
 
 	if (rx_desc->rxmcs >= DESC_RATE_MCS0) {
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,12)
 		rx_status->encoding = RX_ENC_HT;
+#endif
 		rx_status->rate_idx = rx_desc->rxmcs - DESC_RATE_MCS0;
 	} else {
 		rx_status->rate_idx = rx_desc->rxmcs;
@@ -6296,7 +6311,9 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,12)
 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+#endif
 
 	ret = ieee80211_register_hw(priv->hw);
 	if (ret) {
