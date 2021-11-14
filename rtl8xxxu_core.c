@@ -1307,14 +1307,14 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 	case NL80211_CHAN_HT40MINUS:
 		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_40;
 
-		if (hw->conf.chandef.center_freq1 >
+		/*if (hw->conf.chandef.center_freq1 >
 		    hw->conf.channel->center_freq) {
 			sec_ch_above = 1;
 			channel += 2;
-		} else {
+		} else {*/
 			sec_ch_above = 0;
 			channel -= 2;
-		}
+		//}
 
 		val32 = rtl8xxxu_read32(priv, REG_FPGA0_RF_MODE);
 		val32 |= FPGA_RF_MODE;
