@@ -1,4 +1,5 @@
 #include <linux/list.h>
+#include <net/mac80211.h>
 
 #define ETH_ALEN	6
 #define IEEE80211_SCTL_SEQ		0xFFF0
@@ -20,7 +21,7 @@ static inline void ether_addr_copy(u8 *dst, const u8 *src)
 
 #define list_first_entry_or_null(ptr, type, member) ({ \
 	struct list_head *head__ = (ptr); \
-	struct list_head *pos__ = READ_ONCE(head__->next); \
+	struct list_head *pos__ = ACCESS_ONCE(head__->next); \
 	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
 })
 
@@ -33,3 +34,13 @@ static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
 }
 
 #define ieee80211_hw_set(hw, flg)    _ieee80211_hw_set(hw, IEEE80211_HW_##flg)
+
+struct ieee80211_ampdu_params {
+	enum ieee80211_ampdu_mlme_action action;
+	struct ieee80211_sta *sta;
+	u16 tid;
+	u16 ssn;
+	u16 buf_size;
+	bool amsdu;
+	u16 timeout;
+};
