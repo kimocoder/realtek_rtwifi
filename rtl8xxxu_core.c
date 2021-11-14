@@ -4556,8 +4556,8 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 
 			if (sta->ht_cap.ht_supported)
 				dev_info(dev, "%s: HT supported\n", __func__);
-			if (sta->vht_cap.vht_supported)
-				dev_info(dev, "%s: VHT supported\n", __func__);
+			//if (sta->vht_cap.vht_supported)
+			//	dev_info(dev, "%s: VHT supported\n", __func__);
 
 			/* TODO: Set bits 28-31 for rate adaptive id */
 			ramask = (sta->supp_rates[0] & 0xfff) |
