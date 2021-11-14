@@ -5642,7 +5642,7 @@ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
 		dev_info(dev,
 			 "%s: channel: %i (changed %08x chandef.width %02x)\n",
 			 __func__, hw->conf.channel->hw_value,
-			 changed, hw->conf.chandef.width);
+			 changed, hw->conf.channel_type);
 
 	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
 		val16 = ((hw->conf.long_frame_max_tx_count <<
@@ -5653,7 +5653,7 @@ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
 	}
 
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-		switch (hw->conf.chandef.width) {
+		switch (hw->conf.channel_type) {
 		case NL80211_CHAN_NO_HT:
 		case NL80211_CHAN_HT20:
 			ht40 = false;
