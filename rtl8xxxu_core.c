@@ -1156,11 +1156,11 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 	rsr = rtl8xxxu_read32(priv, REG_RESPONSE_RATE_SET);
 	channel = hw->conf.channel->hw_value;
 
-	switch (hw->conf.chandef.width) {
-	case NL80211_CHAN_WIDTH_20_NOHT:
+	switch (hw->conf.channel_type) {
+	case NL80211_CHAN_NO_HT:
 		ht = false;
 		/* fall through */
-	case NL80211_CHAN_WIDTH_20:
+	case NL80211_CHAN_HT20:
 		opmode |= BW_OPMODE_20MHZ;
 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
 
@@ -1176,7 +1176,7 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 		val32 |= FPGA0_ANALOG2_20MHZ;
 		rtl8xxxu_write32(priv, REG_FPGA0_ANALOG2, val32);
 		break;
-	case NL80211_CHAN_WIDTH_40:
+	case NL80211_CHAN_HT40MINUS: //I think this one is closest to NL80211_CHAN_WIDTH_40
 		if (hw->conf.chandef.center_freq1 >
 		    hw->conf.channel->center_freq) {
 			sec_ch_above = 1;
@@ -1258,7 +1258,7 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 
 	for (i = RF_A; i < priv->rf_paths; i++) {
 		val32 = rtl8xxxu_read_rfreg(priv, i, RF6052_REG_MODE_AG);
-		if (hw->conf.chandef.width == NL80211_CHAN_WIDTH_40)
+		if (hw->conf.channel_type == NL80211_CHAN_HT40MINUS)
 			val32 &= ~MODE_AG_CHANNEL_20MHZ;
 		else
 			val32 |= MODE_AG_CHANNEL_20MHZ;
@@ -1283,11 +1283,11 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 /* Hack */
 	subchannel = 0;
 
-	switch (hw->conf.chandef.width) {
-	case NL80211_CHAN_WIDTH_20_NOHT:
+	switch (hw->conf.channel_type) {
+	case NL80211_CHAN_NO_HT:
 		ht = false;
 		/* fall through */
-	case NL80211_CHAN_WIDTH_20:
+	case NL80211_CHAN_HT20:
 		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_20;
 		subchannel = 0;
 
@@ -1304,7 +1304,7 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 		rtl8xxxu_write32(priv, REG_OFDM0_TX_PSDO_NOISE_WEIGHT, val32);
 
 		break;
-	case NL80211_CHAN_WIDTH_40:
+	case NL80211_CHAN_HT40MINUS:
 		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_40;
 
 		if (hw->conf.chandef.center_freq1 >
@@ -1350,7 +1350,7 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 			val32 |= FPGA0_PS_LOWER_CHANNEL;
 		rtl8xxxu_write32(priv, REG_FPGA0_POWER_SAVE, val32);
 		break;
-	case NL80211_CHAN_WIDTH_80:
+	case NL80211_CHAN_HT40PLUS: //I think this one is closest to NL80211_CHAN_WIDTH_80
 		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_80;
 		break;
 	default:
@@ -1381,11 +1381,11 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 	for (i = RF_A; i < priv->rf_paths; i++) {
 		val32 = rtl8xxxu_read_rfreg(priv, i, RF6052_REG_MODE_AG);
 		val32 &= ~MODE_AG_BW_MASK;
-		switch(hw->conf.chandef.width) {
-		case NL80211_CHAN_WIDTH_80:
+		switch(hw->conf.channel_type) {
+		case NL80211_CHAN_HT40PLUS:
 			val32 |= MODE_AG_BW_80MHZ_8723B;
 			break;
-		case NL80211_CHAN_WIDTH_40:
+		case NL80211_CHAN_HT40MINUS:
 			val32 |= MODE_AG_BW_40MHZ_8723B;
 			break;
 		default:
@@ -5654,11 +5654,11 @@ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
 
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
 		switch (hw->conf.chandef.width) {
-		case NL80211_CHAN_WIDTH_20_NOHT:
-		case NL80211_CHAN_WIDTH_20:
+		case NL80211_CHAN_NO_HT:
+		case NL80211_CHAN_HT20:
 			ht40 = false;
 			break;
-		case NL80211_CHAN_WIDTH_40:
+		case NL80211_CHAN_HT40MINUS:
 			ht40 = true;
 			break;
 		default:
