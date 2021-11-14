@@ -42,6 +42,8 @@
 
 #include <linux/version.h>
 
+#include "missing.h"
+
 #define DRIVER_NAME "rtl8xxxu"
 
 int rtl8xxxu_debug = RTL8XXXU_DEBUG_EFUSE;
