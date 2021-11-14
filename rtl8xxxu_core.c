@@ -1177,14 +1177,14 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 		rtl8xxxu_write32(priv, REG_FPGA0_ANALOG2, val32);
 		break;
 	case NL80211_CHAN_HT40MINUS: //I think this one is closest to NL80211_CHAN_WIDTH_40
-		if (hw->conf.chandef.center_freq1 >
+		/*if (hw->conf.chandef.center_freq1 > //uhh...what is this thing? i can`t replace that, so just comment it out...i hope nothing bad will happen...
 		    hw->conf.channel->center_freq) {
 			sec_ch_above = 1;
 			channel += 2;
-		} else {
+		} else {*/
 			sec_ch_above = 0;
 			channel -= 2;
-		}
+		//}
 
 		opmode &= ~BW_OPMODE_20MHZ;
 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);

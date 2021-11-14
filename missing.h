@@ -44,3 +44,7 @@ struct ieee80211_ampdu_params {
 	bool amsdu;
 	u16 timeout;
 };
+
+struct ieee80211_tx_control {
+	struct ieee80211_sta *sta;
+};
