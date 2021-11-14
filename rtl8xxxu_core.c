@@ -5383,7 +5383,7 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 						   rx_desc->rxmcs);
 
 		rx_status->mactime = rx_desc->tsfl;
-		rx_status->flag |= RX_FLAG_MACTIME_START;
+		rx_status->flag |= RX_FLAG_MACTIME_MPDU;
 
 		if (!rx_desc->swdec)
 			rx_status->flag |= RX_FLAG_DECRYPTED;
@@ -5458,7 +5458,7 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 					   rx_desc->rxmcs);
 
 	rx_status->mactime = rx_desc->tsfl;
-	rx_status->flag |= RX_FLAG_MACTIME_START;
+	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
 
 	if (!rx_desc->swdec)
 		rx_status->flag |= RX_FLAG_DECRYPTED;
@@ -5696,7 +5696,8 @@ static int rtl8xxxu_conf_tx(struct ieee80211_hw *hw,
 	acm_ctrl = rtl8xxxu_read8(priv, REG_ACM_HW_CTRL);
 	dev_dbg(dev,
 		"%s: IEEE80211 queue %02x val %08x, acm %i, acm_ctrl %02x\n",
-		__func__, queue, val32, param->acm, acm_ctrl);
+		//__func__, queue, val32, param->acm, acm_ctrl);
+		__func__, queue, val32, false, acm_ctrl); //i dunno, "false" i guess?
 
 	switch (queue) {
 	case IEEE80211_AC_VO:
@@ -5720,9 +5721,9 @@ static int rtl8xxxu_conf_tx(struct ieee80211_hw *hw,
 		break;
 	}
 
-	if (param->acm)
-		acm_ctrl |= acm_bit;
-	else
+	//if (param->acm)
+	//	acm_ctrl |= acm_bit;
+	//else
 		acm_ctrl &= ~acm_bit;
 	rtl8xxxu_write8(priv, REG_ACM_HW_CTRL, acm_ctrl);
 
