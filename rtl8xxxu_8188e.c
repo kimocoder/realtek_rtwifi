@@ -358,13 +358,13 @@ void rtl8188eu_config_channel(struct ieee80211_hw *hw)
 
 	opmode = rtl8xxxu_read8(priv, REG_BW_OPMODE);
 	rsr = rtl8xxxu_read32(priv, REG_RESPONSE_RATE_SET);
-	channel = hw->conf.chandef.chan->hw_value;
+	channel = hw->conf.channel->hw_value;
 
-	switch (hw->conf.chandef.width) {
-	case NL80211_CHAN_WIDTH_20_NOHT:
+	switch (hw->conf.channel_type) {
+	case NL80211_CHAN_NO_HT:
 		ht = false;
 		/* fall through */
-	case NL80211_CHAN_WIDTH_20:
+	case NL80211_CHAN_HT20:
 		opmode |= BW_OPMODE_20MHZ;
 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
 
@@ -376,15 +376,15 @@ void rtl8188eu_config_channel(struct ieee80211_hw *hw)
 		val32 &= ~FPGA_RF_MODE;
 		rtl8xxxu_write32(priv, REG_FPGA1_RF_MODE, val32);
 		break;
-	case NL80211_CHAN_WIDTH_40:
-		if (hw->conf.chandef.center_freq1 >
-		    hw->conf.chandef.chan->center_freq) {
+	case NL80211_CHAN_HT40MINUS:
+		/*if (hw->conf.chandef.center_freq1 >
+		    hw->conf.channel->center_freq) {
 			sec_ch_above = 1;
 			channel += 2;
-		} else {
+		} else {*/
 			sec_ch_above = 0;
 			channel -= 2;
-		}
+		//}
 
 		opmode &= ~BW_OPMODE_20MHZ;
 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
@@ -456,7 +456,7 @@ void rtl8188eu_config_channel(struct ieee80211_hw *hw)
 
 	for (i = RF_A; i < priv->rf_paths; i++) {
 		val32 = rtl8xxxu_read_rfreg(priv, i, RF6052_REG_MODE_AG);
-		if (hw->conf.chandef.width == NL80211_CHAN_WIDTH_40)
+		if (hw->conf.channel_type == NL80211_CHAN_HT40MINUS)
 			val32 &= ~MODE_AG_CHANNEL_20MHZ;
 		else
 			val32 |= MODE_AG_CHANNEL_20MHZ;
