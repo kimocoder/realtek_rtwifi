@@ -40,6 +40,8 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
+#include "missing.h"
+
 #ifdef CONFIG_RTL8XXXU_EXPERIMENTAL
 static struct rtl8xxxu_power_base rtl8192c_power_base = {
 	.reg_0e00 = 0x07090c0c,
