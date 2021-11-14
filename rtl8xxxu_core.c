@@ -1152,7 +1152,7 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 
 	opmode = rtl8xxxu_read8(priv, REG_BW_OPMODE);
 	rsr = rtl8xxxu_read32(priv, REG_RESPONSE_RATE_SET);
-	channel = hw->conf.chandef.chan->hw_value;
+	channel = hw->conf.channel->hw_value;
 
 	switch (hw->conf.chandef.width) {
 	case NL80211_CHAN_WIDTH_20_NOHT:
@@ -1176,7 +1176,7 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 		break;
 	case NL80211_CHAN_WIDTH_40:
 		if (hw->conf.chandef.center_freq1 >
-		    hw->conf.chandef.chan->center_freq) {
+		    hw->conf.channel->center_freq) {
 			sec_ch_above = 1;
 			channel += 2;
 		} else {
@@ -1276,7 +1276,7 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 
 	rf_mode_bw = rtl8xxxu_read16(priv, REG_WMAC_TRXPTCL_CTL);
 	rf_mode_bw &= ~WMAC_TRXPTCL_CTL_BW_MASK;
-	channel = hw->conf.chandef.chan->hw_value;
+	channel = hw->conf.channel->hw_value;
 
 /* Hack */
 	subchannel = 0;
@@ -1306,7 +1306,7 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_40;
 
 		if (hw->conf.chandef.center_freq1 >
-		    hw->conf.chandef.chan->center_freq) {
+		    hw->conf.channel->center_freq) {
 			sec_ch_above = 1;
 			channel += 2;
 		} else {
@@ -4704,8 +4704,7 @@ rtl8xxxu_alloc_tx_urb(struct rtl8xxxu_priv *priv)
 	unsigned long flags;
 
 	spin_lock_irqsave(&priv->tx_urb_lock, flags);
-	tx_urb = list_first_entry_or_null(&priv->tx_urb_free_list,
-					  struct rtl8xxxu_tx_urb, list);
+	tx_urb = list_first_entry_or_null(&priv->tx_urb_free_list, &tx_urb, list);
 	if (tx_urb) {
 		list_del(&tx_urb->list);
 		priv->tx_urb_free_count--;
@@ -5403,8 +5402,8 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 			rx_status->rate_idx = rx_desc->rxmcs;
 		}
 
-		rx_status->freq = hw->conf.chandef.chan->center_freq;
-		rx_status->band = hw->conf.chandef.chan->band;
+		rx_status->freq = hw->conf.channel->center_freq;
+		rx_status->band = hw->conf.channel->band;
 
 		ieee80211_rx_irqsafe(hw, skb);
 
@@ -5479,8 +5478,8 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 		rx_status->rate_idx = rx_desc->rxmcs;
 	}
 
-	rx_status->freq = hw->conf.chandef.chan->center_freq;
-	rx_status->band = hw->conf.chandef.chan->band;
+	rx_status->freq = hw->conf.channel->center_freq;
+	rx_status->band = hw->conf.channel->band;
 
 	ieee80211_rx_irqsafe(hw, skb);
 	return RX_TYPE_DATA_PKT;
@@ -5640,7 +5639,7 @@ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_CHANNEL)
 		dev_info(dev,
 			 "%s: channel: %i (changed %08x chandef.width %02x)\n",
-			 __func__, hw->conf.chandef.chan->hw_value,
+			 __func__, hw->conf.channel->hw_value,
 			 changed, hw->conf.chandef.width);
 
 	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
@@ -5665,7 +5664,7 @@ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
 			goto exit;
 		}
 
-		channel = hw->conf.chandef.chan->hw_value;
+		channel = hw->conf.channel->hw_value;
 
 		priv->fops->set_tx_power(priv, channel, ht40);
 
