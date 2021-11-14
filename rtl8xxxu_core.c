@@ -4706,7 +4706,7 @@ rtl8xxxu_alloc_tx_urb(struct rtl8xxxu_priv *priv)
 	unsigned long flags;
 
 	spin_lock_irqsave(&priv->tx_urb_lock, flags);
-	tx_urb = list_first_entry_or_null(&priv->tx_urb_free_list, &tx_urb, list);
+	tx_urb = list_first_entry_or_null(&priv->tx_urb_free_list, struct rtl8xxxu_tx_urb, list);
 	if (tx_urb) {
 		list_del(&tx_urb->list);
 		priv->tx_urb_free_count--;
