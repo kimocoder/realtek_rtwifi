@@ -6415,7 +6415,7 @@ static const struct usb_device_id dev_table[] = {
 /* D-Link USB-GO-N150 */
 {USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x3311, 0xff, 0xff, 0xff),
 	.driver_info = (unsigned long)&rtl8188eu_fops},
-#ifdef CONFIG_RTL8XXXU_EXPERIMENTAL
+#ifdef CONFIG_RTWIFI_EXPERIMENTAL
 /* Still supported by rtlwifi */
 {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8176, 0xff, 0xff, 0xff),
 	.driver_info = (unsigned long)&rtl8192cu_fops},
@@ -6571,7 +6571,7 @@ static struct usb_driver rtl8xxxu_driver = {
 	.probe = rtl8xxxu_probe,
 	.disconnect = rtl8xxxu_disconnect,
 	.id_table = dev_table,
-	.no_dynamic_id = 1,
+	.no_dynamic_id = 0,
 	//.disable_hub_initiated_lpm = 1,
 };
 
