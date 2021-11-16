@@ -1,4 +1,4 @@
-This is an attempt to backport rt8xxxu driver from kernel 4 to kernel 3...not guarantee to sucsessfully port it or if i will even finish this project as i am a complete noob in C/C++
+This is a backport rt8xxxu driver from kernel 4 to kernel 3...i hope anyone will find this useful...
 
 Original Readme:
 
