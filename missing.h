@@ -30,21 +30,7 @@ static inline void ether_addr_copy(u8 *dst, const u8 *src)
 static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
                                      enum ieee80211_hw_flags flg)
 {
-    return set_bit(flg, &hw->flags);
+    return set_bit(flg, hw->flags);
 }
 
 #define ieee80211_hw_set(hw, flg)    _ieee80211_hw_set(hw, IEEE80211_HW_##flg)
-
-struct ieee80211_ampdu_params {
-	enum ieee80211_ampdu_mlme_action action;
-	struct ieee80211_sta *sta;
-	u16 tid;
-	u16 ssn;
-	u16 buf_size;
-	bool amsdu;
-	u16 timeout;
-};
-
-struct ieee80211_tx_control {
-	struct ieee80211_sta *sta;
-};

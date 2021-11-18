@@ -4332,8 +4332,7 @@ static void rtl8xxxu_cam_write(struct rtl8xxxu_priv *priv,
 	rtl8xxxu_debug = tmp_debug;
 }
 
-static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw,
-				   struct ieee80211_vif *vif, const u8 *mac)
+static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw)
 {
 	struct rtl8xxxu_priv *priv = hw->priv;
 	u8 val8;
@@ -4343,8 +4342,7 @@ static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw,
 	rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
 }
 
-static void rtl8xxxu_sw_scan_complete(struct ieee80211_hw *hw,
-				      struct ieee80211_vif *vif)
+static void rtl8xxxu_sw_scan_complete(struct ieee80211_hw *hw)
 {
 	struct rtl8xxxu_priv *priv = hw->priv;
 	u8 val8;
@@ -5029,7 +5027,6 @@ rtl8xxxu_fill_txdesc_v3(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 }
 
 static void rtl8xxxu_tx(struct ieee80211_hw *hw,
-			struct ieee80211_tx_control *control,
 			struct sk_buff *skb)
 {
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
@@ -5037,7 +5034,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
 	struct rtl8xxxu_priv *priv = hw->priv;
 	struct rtl8xxxu_txdesc32 *tx_desc;
 	struct rtl8xxxu_tx_urb *tx_urb;
-	struct ieee80211_sta *sta = NULL;
+	struct ieee80211_sta *sta = tx_info->control.sta;
 	struct ieee80211_vif *vif = tx_info->control.vif;
 	struct device *dev = &priv->udev->dev;
 	u32 queue, rts_rate;
@@ -5071,8 +5068,8 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
 
 	tx_info->rate_driver_data[0] = hw;
 
-	if (control && control->sta)
-		sta = control->sta;
+	//if (control && control->sta)
+	//	sta = control->sta;
 
 	tx_desc = skb_push(skb, tx_desc_size);
 
@@ -5871,14 +5868,11 @@ static int rtl8xxxu_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 }
 
 static int
-rtl8xxxu_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-		      struct ieee80211_ampdu_params *params)
+rtl8xxxu_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif, enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16 *ssn, u8 buf_size)
 {
 	struct rtl8xxxu_priv *priv = hw->priv;
 	struct device *dev = &priv->udev->dev;
 	u8 ampdu_factor, ampdu_density;
-	struct ieee80211_sta *sta = params->sta;
-	enum ieee80211_ampdu_mlme_action action = params->action;
 
 	switch (action) {
 	case IEEE80211_AMPDU_TX_START:
