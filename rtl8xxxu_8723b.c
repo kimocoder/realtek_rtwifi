@@ -40,7 +40,11 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
+#include <linux/version.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,7)
 #include "missing.h"
+#endif
 
 static struct rtl8xxxu_reg8val rtl8723b_mac_init_table[] = {
 	{0x02f, 0x30}, {0x035, 0x00}, {0x039, 0x08}, {0x04e, 0xe0},

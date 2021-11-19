@@ -40,7 +40,11 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
+#include <linux/version.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,7)
 #include "missing.h"
+#endif
 
 #ifdef CONFIG_RTWIFI_EXPERIMENTAL
 static struct rtl8xxxu_power_base rtl8192c_power_base = {

@@ -40,7 +40,11 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
+#include <linux/version.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,7)
 #include "missing.h"
+#endif
 
 static struct rtl8xxxu_reg8val rtl8188e_mac_init_table[] = {
 	{0x026, 0x41}, {0x027, 0x35}, {0x428, 0x0a}, {0x429, 0x10},
@@ -358,13 +362,26 @@ void rtl8188eu_config_channel(struct ieee80211_hw *hw)
 
 	opmode = rtl8xxxu_read8(priv, REG_BW_OPMODE);
 	rsr = rtl8xxxu_read32(priv, REG_RESPONSE_RATE_SET);
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
+	channel = hw->conf.chandef.chan->hw_value;
+#else
 	channel = hw->conf.channel->hw_value;
+#endif
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
+	switch (hw->conf.chandef.width) {
+	case NL80211_CHAN_WIDTH_20_NOHT:
+#else
 	switch (hw->conf.channel_type) {
 	case NL80211_CHAN_NO_HT:
+#endif
 		ht = false;
 		/* fall through */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
+	case NL80211_CHAN_WIDTH_20:
+#else
 	case NL80211_CHAN_HT20:
+#endif
 		opmode |= BW_OPMODE_20MHZ;
 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
 
@@ -376,15 +393,24 @@ void rtl8188eu_config_channel(struct ieee80211_hw *hw)
 		val32 &= ~FPGA_RF_MODE;
 		rtl8xxxu_write32(priv, REG_FPGA1_RF_MODE, val32);
 		break;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
+	case NL80211_CHAN_WIDTH_40:
+#else
 	case NL80211_CHAN_HT40MINUS:
-		/*if (hw->conf.chandef.center_freq1 >
-		    hw->conf.channel->center_freq) {
+#endif
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
+		if (hw->conf.chandef.center_freq1 >
+		    hw->conf.chandef.chan->center_freq) {
 			sec_ch_above = 1;
 			channel += 2;
-		} else {*/
+		} else {
 			sec_ch_above = 0;
 			channel -= 2;
-		//}
+		}
+#else
+		sec_ch_above = 0;
+		channel -= 2;
+#endif
 
 		opmode &= ~BW_OPMODE_20MHZ;
 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
@@ -456,7 +482,11 @@ void rtl8188eu_config_channel(struct ieee80211_hw *hw)
 
 	for (i = RF_A; i < priv->rf_paths; i++) {
 		val32 = rtl8xxxu_read_rfreg(priv, i, RF6052_REG_MODE_AG);
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
+		if (hw->conf.chandef.width == NL80211_CHAN_WIDTH_40)
+#else
 		if (hw->conf.channel_type == NL80211_CHAN_HT40MINUS)
+#endif
 			val32 &= ~MODE_AG_CHANNEL_20MHZ;
 		else
 			val32 |= MODE_AG_CHANNEL_20MHZ;

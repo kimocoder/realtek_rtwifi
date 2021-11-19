@@ -40,7 +40,11 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
+#include <linux/version.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,7)
 #include "missing.h"
+#endif
 
 static struct rtl8xxxu_power_base rtl8723a_power_base = {
 	.reg_0e00 = 0x0a0c0c0c,
