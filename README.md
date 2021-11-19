@@ -1,7 +1,3 @@
-This is a backport rt8xxxu driver from kernel 4 to kernel 3...i hope anyone will find this useful...
-
-Original Readme:
-
   ## Realtek RTWIFI - standalone mac80211 driver w/good support
   This driver currently supports these chipsets: Realtek 8188e(us) 8192e 8192c 8723a and 8723b 
 
