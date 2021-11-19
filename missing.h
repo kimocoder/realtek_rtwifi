@@ -1,6 +1,6 @@
 #include <linux/list.h>
 #include <net/mac80211.h>
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,7)
 #define ETH_ALEN	6
 static inline void eth_broadcast_addr(u8 *addr)
 {
@@ -16,7 +16,7 @@ static inline void ether_addr_copy(u8 *dst, const u8 *src)
 	a[1] = b[1];
 	a[2] = b[2];
 }
-
+#endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,11)
 #define list_first_entry_or_null(ptr, type, member) ({ \
 	struct list_head *head__ = (ptr); \
@@ -26,7 +26,7 @@ static inline void ether_addr_copy(u8 *dst, const u8 *src)
 #define IEEE80211_SCTL_SEQ		0xFFF0
 #define IEEE80211_SEQ_TO_SN(seq)	(((seq) & IEEE80211_SCTL_SEQ) >> 4)
 #endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,52)
+
 static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
                                      enum ieee80211_hw_flags flg)
 {
@@ -34,4 +34,3 @@ static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
 }
 
 #define ieee80211_hw_set(hw, flg)    _ieee80211_hw_set(hw, IEEE80211_HW_##flg)
-#endif

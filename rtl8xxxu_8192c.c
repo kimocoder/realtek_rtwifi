@@ -42,7 +42,7 @@
 
 #include <linux/version.h>
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,7)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,52)
 #include "missing.h"
 #endif
 
