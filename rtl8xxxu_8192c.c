@@ -40,7 +40,7 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
-#ifdef CONFIG_RTL8XXXU_EXPERIMENTAL
+#ifdef CONFIG_RTWIFI_EXPERIMENTAL
 static struct rtl8xxxu_power_base rtl8192c_power_base = {
 	.reg_0e00 = 0x07090c0c,
 	.reg_0e04 = 0x01020405,
