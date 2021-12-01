@@ -42,7 +42,7 @@
 
 #include <linux/version.h>
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,52)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,11)
 #include "missing.h"
 #endif
 
@@ -6444,12 +6444,21 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 	SET_IEEE80211_PERM_ADDR(hw, priv->mac_addr);
 
 	hw->extra_tx_headroom = priv->fops->tx_desc_size;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,1,52)
 	ieee80211_hw_set(hw, SIGNAL_DBM);
 	/*
 	 * The firmware handles rate control
 	 */
 	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
+#else
+	hw->flags |= IEEE80211_HW_SIGNAL_DBM;
+	/*
+	 * The firmware handles rate control
+	 */
+	hw->flags |= IEEE80211_HW_HAS_RATE_CONTROL;
+	hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+#endif
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,12)
 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);

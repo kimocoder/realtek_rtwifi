@@ -17,7 +17,7 @@ static inline void ether_addr_copy(u8 *dst, const u8 *src)
 	a[2] = b[2];
 }
 #endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,11)
+
 #define list_first_entry_or_null(ptr, type, member) ({ \
 	struct list_head *head__ = (ptr); \
 	struct list_head *pos__ = ACCESS_ONCE(head__->next); \
@@ -25,12 +25,3 @@ static inline void ether_addr_copy(u8 *dst, const u8 *src)
 })
 #define IEEE80211_SCTL_SEQ		0xFFF0
 #define IEEE80211_SEQ_TO_SN(seq)	(((seq) & IEEE80211_SCTL_SEQ) >> 4)
-#endif
-
-static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
-                                     enum ieee80211_hw_flags flg)
-{
-    return set_bit(flg, &hw->flags);
-}
-
-#define ieee80211_hw_set(hw, flg)    _ieee80211_hw_set(hw, IEEE80211_HW_##flg)
