@@ -42,6 +42,10 @@
 
 #include <linux/version.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,11)
+#include "missing.h"
+#endif
+
 #define DRIVER_NAME "rtl8xxxu"
 
 int rtl8xxxu_debug = RTL8XXXU_DEBUG_EFUSE;
@@ -1152,13 +1156,26 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 
 	opmode = rtl8xxxu_read8(priv, REG_BW_OPMODE);
 	rsr = rtl8xxxu_read32(priv, REG_RESPONSE_RATE_SET);
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	channel = hw->conf.chandef.chan->hw_value;
+#else
+	channel = hw->conf.channel->hw_value;
+#endif
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	switch (hw->conf.chandef.width) {
 	case NL80211_CHAN_WIDTH_20_NOHT:
+#else
+	switch (hw->conf.channel_type) {
+	case NL80211_CHAN_NO_HT:
+#endif
 		ht = false;
-		fallthrough;
+		/* fall through */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	case NL80211_CHAN_WIDTH_20:
+#else
+	case NL80211_CHAN_HT20:
+#endif
 		opmode |= BW_OPMODE_20MHZ;
 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
 
@@ -1174,7 +1191,12 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 		val32 |= FPGA0_ANALOG2_20MHZ;
 		rtl8xxxu_write32(priv, REG_FPGA0_ANALOG2, val32);
 		break;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	case NL80211_CHAN_WIDTH_40:
+#else
+	case NL80211_CHAN_HT40MINUS:
+#endif
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		if (hw->conf.chandef.center_freq1 >
 		    hw->conf.chandef.chan->center_freq) {
 			sec_ch_above = 1;
@@ -1183,6 +1205,10 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 			sec_ch_above = 0;
 			channel -= 2;
 		}
+#else
+		sec_ch_above = 0;
+		channel -= 2;
+#endif
 
 		opmode &= ~BW_OPMODE_20MHZ;
 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
@@ -1256,7 +1282,11 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
 
 	for (i = RF_A; i < priv->rf_paths; i++) {
 		val32 = rtl8xxxu_read_rfreg(priv, i, RF6052_REG_MODE_AG);
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		if (hw->conf.chandef.width == NL80211_CHAN_WIDTH_40)
+#else
+		if (hw->conf.channel_type == NL80211_CHAN_HT40MINUS)
+#endif
 			val32 &= ~MODE_AG_CHANNEL_20MHZ;
 		else
 			val32 |= MODE_AG_CHANNEL_20MHZ;
@@ -1276,16 +1306,28 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 
 	rf_mode_bw = rtl8xxxu_read16(priv, REG_WMAC_TRXPTCL_CTL);
 	rf_mode_bw &= ~WMAC_TRXPTCL_CTL_BW_MASK;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	channel = hw->conf.chandef.chan->hw_value;
+#else
+	channel = hw->conf.channel->hw_value;
+#endif
 
 /* Hack */
 	subchannel = 0;
-
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	switch (hw->conf.chandef.width) {
 	case NL80211_CHAN_WIDTH_20_NOHT:
+#else
+	switch (hw->conf.channel_type) {
+	case NL80211_CHAN_NO_HT:
+#endif
 		ht = false;
-		fallthrough;
+		/* fall through */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	case NL80211_CHAN_WIDTH_20:
+#else
+	case NL80211_CHAN_HT20:
+#endif
 		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_20;
 		subchannel = 0;
 
@@ -1302,9 +1344,13 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 		rtl8xxxu_write32(priv, REG_OFDM0_TX_PSDO_NOISE_WEIGHT, val32);
 
 		break;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	case NL80211_CHAN_WIDTH_40:
+#else
+	case NL80211_CHAN_HT40MINUS:
+#endif
 		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_40;
-
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		if (hw->conf.chandef.center_freq1 >
 		    hw->conf.chandef.chan->center_freq) {
 			sec_ch_above = 1;
@@ -1313,6 +1359,10 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 			sec_ch_above = 0;
 			channel -= 2;
 		}
+#else
+		sec_ch_above = 0;
+		channel -= 2;
+#endif
 
 		val32 = rtl8xxxu_read32(priv, REG_FPGA0_RF_MODE);
 		val32 |= FPGA_RF_MODE;
@@ -1348,7 +1398,11 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 			val32 |= FPGA0_PS_LOWER_CHANNEL;
 		rtl8xxxu_write32(priv, REG_FPGA0_POWER_SAVE, val32);
 		break;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	case NL80211_CHAN_WIDTH_80:
+#else
+	case NL80211_CHAN_HT40PLUS:
+#endif
 		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_80;
 		break;
 	default:
@@ -1379,11 +1433,20 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
 	for (i = RF_A; i < priv->rf_paths; i++) {
 		val32 = rtl8xxxu_read_rfreg(priv, i, RF6052_REG_MODE_AG);
 		val32 &= ~MODE_AG_BW_MASK;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		switch(hw->conf.chandef.width) {
 		case NL80211_CHAN_WIDTH_80:
+#else
+		switch(hw->conf.channel_type) {
+		case NL80211_CHAN_HT40PLUS:
+#endif
 			val32 |= MODE_AG_BW_80MHZ_8723B;
 			break;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		case NL80211_CHAN_WIDTH_40:
+#else
+		case NL80211_CHAN_HT40MINUS:
+#endif
 			val32 |= MODE_AG_BW_40MHZ_8723B;
 			break;
 		default:
@@ -4330,8 +4393,11 @@ static void rtl8xxxu_cam_write(struct rtl8xxxu_priv *priv,
 	rtl8xxxu_debug = tmp_debug;
 }
 
-static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw,
-				   struct ieee80211_vif *vif, const u8 *mac)
+static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
+, struct ieee80211_vif *vif, const u8 *mac
+#endif
+)
 {
 	struct rtl8xxxu_priv *priv = hw->priv;
 	u8 val8;
@@ -4341,8 +4407,11 @@ static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw,
 	rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
 }
 
-static void rtl8xxxu_sw_scan_complete(struct ieee80211_hw *hw,
-				      struct ieee80211_vif *vif)
+static void rtl8xxxu_sw_scan_complete(struct ieee80211_hw *hw
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
+, struct ieee80211_vif *vif
+#endif
+)
 {
 	struct rtl8xxxu_priv *priv = hw->priv;
 	u8 val8;
@@ -4560,8 +4629,10 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 
 			if (sta->ht_cap.ht_supported)
 				dev_info(dev, "%s: HT supported\n", __func__);
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,7,10)
 			if (sta->vht_cap.vht_supported)
 				dev_info(dev, "%s: VHT supported\n", __func__);
+#endif
 
 			/* TODO: Set bits 28-31 for rate adaptive id */
 			ramask = (sta->supp_rates[0] & 0xfff) |
@@ -4708,8 +4779,7 @@ rtl8xxxu_alloc_tx_urb(struct rtl8xxxu_priv *priv)
 	unsigned long flags;
 
 	spin_lock_irqsave(&priv->tx_urb_lock, flags);
-	tx_urb = list_first_entry_or_null(&priv->tx_urb_free_list,
-					  struct rtl8xxxu_tx_urb, list);
+	tx_urb = list_first_entry_or_null(&priv->tx_urb_free_list, struct rtl8xxxu_tx_urb, list);
 	if (tx_urb) {
 		list_del(&tx_urb->list);
 		priv->tx_urb_free_count--;
@@ -5036,7 +5106,9 @@ rtl8xxxu_fill_txdesc_v3(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 }
 
 static void rtl8xxxu_tx(struct ieee80211_hw *hw,
-			struct ieee80211_tx_control *control,
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
+struct ieee80211_tx_control *control,
+#endif
 			struct sk_buff *skb)
 {
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
@@ -5044,7 +5116,11 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
 	struct rtl8xxxu_priv *priv = hw->priv;
 	struct rtl8xxxu_txdesc32 *tx_desc;
 	struct rtl8xxxu_tx_urb *tx_urb;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
 	struct ieee80211_sta *sta = NULL;
+#else
+	struct ieee80211_sta *sta = tx_info->control.sta;
+#endif
 	struct ieee80211_vif *vif = tx_info->control.vif;
 	struct device *dev = &priv->udev->dev;
 	u32 queue, rts_rate;
@@ -5078,8 +5154,10 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
 
 	tx_info->rate_driver_data[0] = hw;
 
+	#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
 	if (control && control->sta)
 		sta = control->sta;
+	#endif
 
 	tx_desc = skb_push(skb, tx_desc_size);
 
@@ -5402,7 +5480,11 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 						   rx_desc->rxmcs);
 
 		rx_status->mactime = rx_desc->tsfl;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,7,10)
 		rx_status->flag |= RX_FLAG_MACTIME_START;
+#else
+		rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+#endif
 
 		if (!rx_desc->swdec)
 			rx_status->flag |= RX_FLAG_DECRYPTED;
@@ -5422,9 +5504,14 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 		} else {
 			rx_status->rate_idx = rx_desc->rxmcs;
 		}
-
+		
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		rx_status->freq = hw->conf.chandef.chan->center_freq;
 		rx_status->band = hw->conf.chandef.chan->band;
+#else
+		rx_status->freq = hw->conf.channel->center_freq;
+		rx_status->band = hw->conf.channel->band;
+#endif
 
 		ieee80211_rx_irqsafe(hw, skb);
 
@@ -5479,7 +5566,11 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 					   rx_desc->rxmcs);
 
 	rx_status->mactime = rx_desc->tsfl;
-	rx_status->flag |= RX_FLAG_MACTIME_START;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,7,10)
+		rx_status->flag |= RX_FLAG_MACTIME_START;
+#else
+		rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+#endif
 
 	if (!rx_desc->swdec)
 		rx_status->flag |= RX_FLAG_DECRYPTED;
@@ -5501,8 +5592,13 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
 		rx_status->rate_idx = rx_desc->rxmcs;
 	}
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	rx_status->freq = hw->conf.chandef.chan->center_freq;
 	rx_status->band = hw->conf.chandef.chan->band;
+#else
+	rx_status->freq = hw->conf.channel->center_freq;
+	rx_status->band = hw->conf.channel->band;
+#endif
 
 	ieee80211_rx_irqsafe(hw, skb);
 	return RX_TYPE_DATA_PKT;
@@ -5662,8 +5758,13 @@ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_CHANNEL)
 		dev_info(dev,
 			 "%s: channel: %i (changed %08x chandef.width %02x)\n",
-			 __func__, hw->conf.chandef.chan->hw_value,
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
+			__func__, hw->conf.chandef.chan->hw_value,
 			 changed, hw->conf.chandef.width);
+#else
+			 __func__, hw->conf.channel->hw_value,
+			 changed, hw->conf.channel_type);
+#endif
 
 	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
 		val16 = ((hw->conf.long_frame_max_tx_count <<
@@ -5674,12 +5775,22 @@ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
 	}
 
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		switch (hw->conf.chandef.width) {
 		case NL80211_CHAN_WIDTH_20_NOHT:
 		case NL80211_CHAN_WIDTH_20:
+#else
+		switch (hw->conf.channel_type) {
+		case NL80211_CHAN_NO_HT:
+		case NL80211_CHAN_HT20:
+#endif
 			ht40 = false;
 			break;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		case NL80211_CHAN_WIDTH_40:
+#else
+		case NL80211_CHAN_HT40MINUS:
+#endif
 			ht40 = true;
 			break;
 		default:
@@ -5687,7 +5798,11 @@ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
 			goto exit;
 		}
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		channel = hw->conf.chandef.chan->hw_value;
+#else
+		channel = hw->conf.channel->hw_value;
+#endif
 
 		priv->fops->set_tx_power(priv, channel, ht40);
 
@@ -5717,7 +5832,11 @@ static int rtl8xxxu_conf_tx(struct ieee80211_hw *hw,
 	acm_ctrl = rtl8xxxu_read8(priv, REG_ACM_HW_CTRL);
 	dev_dbg(dev,
 		"%s: IEEE80211 queue %02x val %08x, acm %i, acm_ctrl %02x\n",
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 		__func__, queue, val32, param->acm, acm_ctrl);
+#else
+		__func__, queue, val32, false, acm_ctrl);
+#endif
 
 	switch (queue) {
 	case IEEE80211_AC_VO:
@@ -5740,10 +5859,11 @@ static int rtl8xxxu_conf_tx(struct ieee80211_hw *hw,
 		acm_bit = 0;
 		break;
 	}
-
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	if (param->acm)
 		acm_ctrl |= acm_bit;
 	else
+#endif
 		acm_ctrl &= ~acm_bit;
 	rtl8xxxu_write8(priv, REG_ACM_HW_CTRL, acm_ctrl);
 
@@ -5843,7 +5963,11 @@ static int rtl8xxxu_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 
 		break;
 	case WLAN_CIPHER_SUITE_CCMP:
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
 		key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
+#else
+		key->flags |= IEEE80211_KEY_FLAG_SW_MGMT;
+#endif
 		break;
 	case WLAN_CIPHER_SUITE_TKIP:
 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
@@ -5891,15 +6015,22 @@ static int rtl8xxxu_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 }
 
 static int
-rtl8xxxu_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-		      struct ieee80211_ampdu_params *params)
+rtl8xxxu_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif, 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
+struct ieee80211_ampdu_params *params
+#else
+enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16 *ssn, u8 buf_size
+#endif
+)
 {
 	struct rtl8xxxu_priv *priv = hw->priv;
 	struct device *dev = &priv->udev->dev;
 	u8 ampdu_factor, ampdu_density;
+	#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
 	struct ieee80211_sta *sta = params->sta;
 	u16 tid = params->tid;
 	enum ieee80211_ampdu_mlme_action action = params->action;
+	#endif
 
 	switch (action) {
 	case IEEE80211_AMPDU_TX_START:
@@ -5925,7 +6056,14 @@ rtl8xxxu_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	case IEEE80211_AMPDU_TX_OPERATIONAL:
 		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_OPERATIONAL\n", __func__);
 		set_bit(tid, priv->tid_tx_operational);
+	#else
+	case IEEE80211_AMPDU_TX_STOP:
+		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_STOP\n",
+			 __func__);
+		rtl8xxxu_set_ampdu_factor(priv, 0);
+		rtl8xxxu_set_ampdu_min_space(priv, 0);
 		break;
+	#endif
 	case IEEE80211_AMPDU_RX_START:
 		dev_dbg(dev, "%s: IEEE80211_AMPDU_RX_START\n", __func__);
 		break;
@@ -6330,12 +6468,21 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 	SET_IEEE80211_PERM_ADDR(hw, priv->mac_addr);
 
 	hw->extra_tx_headroom = priv->fops->tx_desc_size;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,1,52)
 	ieee80211_hw_set(hw, SIGNAL_DBM);
 	/*
 	 * The firmware handles rate control
 	 */
 	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
+#else
+	hw->flags |= IEEE80211_HW_SIGNAL_DBM;
+	/*
+	 * The firmware handles rate control
+	 */
+	hw->flags |= IEEE80211_HW_HAS_RATE_CONTROL;
+	hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+#endif
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,12)
 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
@@ -6434,7 +6581,7 @@ static const struct usb_device_id dev_table[] = {
 /* D-Link USB-GO-N150 */
 {USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x3311, 0xff, 0xff, 0xff),
 	.driver_info = (unsigned long)&rtl8188eu_fops},
-#ifdef CONFIG_RTL8XXXU_EXPERIMENTAL
+#ifdef CONFIG_RTWIFI_EXPERIMENTAL
 /* Still supported by rtlwifi */
 {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8176, 0xff, 0xff, 0xff),
 	.driver_info = (unsigned long)&rtl8192cu_fops},
@@ -6591,7 +6738,9 @@ static struct usb_driver rtl8xxxu_driver = {
 	.disconnect = rtl8xxxu_disconnect,
 	.id_table = dev_table,
 	.no_dynamic_id = 1,
+	#if LINUX_VERSION_CODE > KERNEL_VERSION(3,4,113)
 	.disable_hub_initiated_lpm = 1,
+	#endif
 };
 
 static int __init rtl8xxxu_module_init(void)
