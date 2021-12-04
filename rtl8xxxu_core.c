@@ -6043,6 +6043,7 @@ enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16
 			"Changed HT: ampdu_factor %02x, ampdu_density %02x\n",
 			ampdu_factor, ampdu_density);
 		return IEEE80211_AMPDU_TX_START_IMMEDIATE;
+	#if LINUX_VERSION_CODE > KERNEL_VERSION(3,8,13)
 	case IEEE80211_AMPDU_TX_STOP_CONT:
 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
@@ -6053,9 +6054,6 @@ enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16
 		clear_bit(tid, priv->tid_tx_operational);
 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
 		break;
-	case IEEE80211_AMPDU_TX_OPERATIONAL:
-		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_OPERATIONAL\n", __func__);
-		set_bit(tid, priv->tid_tx_operational);
 	#else
 	case IEEE80211_AMPDU_TX_STOP:
 		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_STOP\n",
@@ -6064,6 +6062,10 @@ enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16
 		rtl8xxxu_set_ampdu_min_space(priv, 0);
 		break;
 	#endif
+	case IEEE80211_AMPDU_TX_OPERATIONAL:
+		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_OPERATIONAL\n", __func__);
+		set_bit(tid, priv->tid_tx_operational);
+		break;
 	case IEEE80211_AMPDU_RX_START:
 		dev_dbg(dev, "%s: IEEE80211_AMPDU_RX_START\n", __func__);
 		break;
