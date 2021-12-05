@@ -1,6 +1,6 @@
 #include <linux/list.h>
 #include <net/mac80211.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,7)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,5,7)
 #define ETH_ALEN	6
 static inline void eth_broadcast_addr(u8 *addr)
 {
@@ -17,7 +17,9 @@ static inline void ether_addr_copy(u8 *dst, const u8 *src)
 	a[2] = b[2];
 }
 #endif
-
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,7,10)
+#define IEEE80211_NUM_TIDS 16
+#endif
 #define list_first_entry_or_null(ptr, type, member) ({ \
 	struct list_head *head__ = (ptr); \
 	struct list_head *pos__ = ACCESS_ONCE(head__->next); \

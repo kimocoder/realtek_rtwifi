@@ -40,12 +40,6 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
-#include <linux/version.h>
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,11)
-#include "missing.h"
-#endif
-
 static struct rtl8xxxu_reg8val rtl8192e_mac_init_table[] = {
 	{0x011, 0xeb}, {0x012, 0x07}, {0x014, 0x75}, {0x303, 0xa7},
 	{0x428, 0x0a}, {0x429, 0x10}, {0x430, 0x00}, {0x431, 0x00},
@@ -668,9 +662,16 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
 	 * length is not 0.
 	 */
 	record_offset = 0;
-	rtl8192eu_log_next_device_info(priv, "Vendor", efuse->device_info, &record_offset);
+	/*rtl8192eu_log_next_device_info(priv, "Vendor", efuse->device_info, &record_offset);
 	rtl8192eu_log_next_device_info(priv, "Product", efuse->device_info, &record_offset);
-	rtl8192eu_log_next_device_info(priv, "Serial", efuse->device_info, &record_offset);
+	rtl8192eu_log_next_device_info(priv, "Serial", efuse->device_info, &record_offset);*/
+	//There is no such thing as efuse->device_info, temporary placing old code here
+	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
+	dev_info(&priv->udev->dev, "Product: %.11s\n", efuse->device_name);
+	if (memchr_inv(efuse->serial, 0xff, 11))
+		dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
+	else
+		dev_info(&priv->udev->dev, "Serial not available.\n");
 
 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
 		unsigned char *raw = priv->efuse_wifi.raw;

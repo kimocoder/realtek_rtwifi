@@ -42,10 +42,6 @@
 
 #include <linux/version.h>
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,11)
-#include "missing.h"
-#endif
-
 #define DRIVER_NAME "rtl8xxxu"
 
 int rtl8xxxu_debug = RTL8XXXU_DEBUG_EFUSE;
@@ -1803,13 +1799,17 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
 	if (val16 & NORMAL_SIE_EP_TX_HIGH_MASK) {
 		priv->ep_tx_high_queue = 1;
 		priv->ep_tx_count++;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(5,3,18)
 		fallthrough;
+#endif
 	}
 
 	if (val16 & NORMAL_SIE_EP_TX_NORMAL_MASK) {
 		priv->ep_tx_normal_queue = 1;
 		priv->ep_tx_count++;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(5,3,18)
 		fallthrough;
+#endif
 	}
 
 	if (val16 & NORMAL_SIE_EP_TX_LOW_MASK) {
@@ -1826,11 +1826,15 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
 		case 3:
 			priv->ep_tx_low_queue = 1;
 			priv->ep_tx_count++;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(5,3,18)
 			fallthrough;
+#endif
 		case 2:
 			priv->ep_tx_normal_queue = 1;
 			priv->ep_tx_count++;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(5,3,18)
 			fallthrough;
+#endif
 		case 1:
 			priv->ep_tx_high_queue = 1;
 			priv->ep_tx_count++;
@@ -4583,7 +4587,11 @@ static void rtl8xxxu_set_basic_rates(struct rtl8xxxu_priv *priv, u32 rate_cfg)
 	rate_cfg &= RESPONSE_RATE_BITMAP_ALL;
 
 	val32 = rtl8xxxu_read32(priv, REG_RESPONSE_RATE_SET);
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,9,11)
 	if (hw->conf.chandef.chan->band == NL80211_BAND_5GHZ)
+#else
+	if (hw->conf.channel->band == IEEE80211_BAND_5GHZ)
+#endif
 		val32 &= RESPONSE_RATE_RRSR_INIT_5G;
 	else
 		val32 &= RESPONSE_RATE_RRSR_INIT_2G;
@@ -6026,11 +6034,11 @@ enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16
 	struct rtl8xxxu_priv *priv = hw->priv;
 	struct device *dev = &priv->udev->dev;
 	u8 ampdu_factor, ampdu_density;
-	#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
 	struct ieee80211_sta *sta = params->sta;
 	u16 tid = params->tid;
 	enum ieee80211_ampdu_mlme_action action = params->action;
-	#endif
+#endif
 
 	switch (action) {
 	case IEEE80211_AMPDU_TX_START:
@@ -6042,8 +6050,12 @@ enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16
 		dev_dbg(dev,
 			"Changed HT: ampdu_factor %02x, ampdu_density %02x\n",
 			ampdu_factor, ampdu_density);
+#if LINUX_VERSION_CODE > KERNEL_VERSION(5,4,163)
 		return IEEE80211_AMPDU_TX_START_IMMEDIATE;
-	#if LINUX_VERSION_CODE > KERNEL_VERSION(3,8,13)
+#else
+		return 1;
+#endif
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,8,13)
 	case IEEE80211_AMPDU_TX_STOP_CONT:
 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
@@ -6054,14 +6066,14 @@ enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16
 		clear_bit(tid, priv->tid_tx_operational);
 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
 		break;
-	#else
+#else
 	case IEEE80211_AMPDU_TX_STOP:
 		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_STOP\n",
 			 __func__);
 		rtl8xxxu_set_ampdu_factor(priv, 0);
 		rtl8xxxu_set_ampdu_min_space(priv, 0);
 		break;
-	#endif
+#endif
 	case IEEE80211_AMPDU_TX_OPERATIONAL:
 		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_OPERATIONAL\n", __func__);
 		set_bit(tid, priv->tid_tx_operational);
