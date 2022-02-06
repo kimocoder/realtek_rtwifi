@@ -17,7 +17,7 @@
 
 #include <linux/version.h>
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,9,11)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,13,11)
 #include "missing.h"
 #endif
 

@@ -4398,7 +4398,7 @@ static void rtl8xxxu_cam_write(struct rtl8xxxu_priv *priv,
 }
 
 static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw
-#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,18,140)
 , struct ieee80211_vif *vif, const u8 *mac
 #endif
 )
@@ -4412,7 +4412,7 @@ static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw
 }
 
 static void rtl8xxxu_sw_scan_complete(struct ieee80211_hw *hw
-#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,18,140)
 , struct ieee80211_vif *vif
 #endif
 )
@@ -6024,7 +6024,7 @@ static int rtl8xxxu_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 
 static int
 rtl8xxxu_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif, 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,4,68)
 struct ieee80211_ampdu_params *params
 #else
 enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16 *ssn, u8 buf_size
@@ -6034,7 +6034,7 @@ enum ieee80211_ampdu_mlme_action action, struct ieee80211_sta *sta, u16 tid, u16
 	struct rtl8xxxu_priv *priv = hw->priv;
 	struct device *dev = &priv->udev->dev;
 	u8 ampdu_factor, ampdu_density;
-#if LINUX_VERSION_CODE > KERNEL_VERSION(3,6,11)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,4,68)
 	struct ieee80211_sta *sta = params->sta;
 	u16 tid = params->tid;
 	enum ieee80211_ampdu_mlme_action action = params->action;
