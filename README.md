@@ -304,5 +304,10 @@ parm:           dma_agg_pages:Set DMA aggregation pages (range 1-127, 0 to disab
 root@kali:~#
   ```
   
+### Sources
+
+  ```sh
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/drivers/net/wireless/realtek/rtl8xxxu
+  ```
   
   
