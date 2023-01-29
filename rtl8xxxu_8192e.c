@@ -665,7 +665,7 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
 	rtl8192eu_log_next_device_info(priv, "Vendor", efuse->device_info, &record_offset);
 	rtl8192eu_log_next_device_info(priv, "Product", efuse->device_info, &record_offset);
 	rtl8192eu_log_next_device_info(priv, "Serial", efuse->device_info, &record_offset);
-
+	
 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
 		unsigned char *raw = priv->efuse_wifi.raw;
 
