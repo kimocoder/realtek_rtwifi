@@ -6965,6 +6965,40 @@ exit:
 	return ret;
 }
 
+static void rtl8xxxu_init_led(struct rtl8xxxu_priv *priv)
+{
+	struct led_classdev *led = &priv->led_cdev;
+
+	if (!priv->fops->led_classdev_brightness_set)
+		return;
+
+	led->brightness_set_blocking = priv->fops->led_classdev_brightness_set;
+
+	snprintf(priv->led_name, sizeof(priv->led_name),
+		 "rtl8xxxu-usb%s", dev_name(&priv->udev->dev));
+	led->name = priv->led_name;
+	led->max_brightness = RTL8XXXU_HW_LED_CONTROL;
+
+	if (led_classdev_register(&priv->udev->dev, led))
+		return;
+
+	priv->led_registered = true;
+
+	led->brightness = led->max_brightness;
+	priv->fops->led_classdev_brightness_set(led, led->brightness);
+}
+
+static void rtl8xxxu_deinit_led(struct rtl8xxxu_priv *priv)
+{
+	struct led_classdev *led = &priv->led_cdev;
+
+	if (!priv->led_registered)
+		return;
+
+	priv->fops->led_classdev_brightness_set(led, LED_OFF);
+	led_classdev_unregister(led);
+}
+
 static int rtl8xxxu_probe(struct usb_interface *interface,
 			  const struct usb_device_id *id)
 {
@@ -7136,7 +7170,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
 
-	#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,12)
+	#if LINUX_VERSION_CODE > KERNEL_VERSION(4, 11, 12)
 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
 	#endif
 
@@ -7146,6 +7180,8 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 			__func__, ret);
 		goto err_set_intfdata;
 	}
+
+	rtl8xxxu_init_led(priv);
 
 	return 0;
 
@@ -7170,6 +7206,8 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
 
 	hw = usb_get_intfdata(interface);
 	priv = hw->priv;
+
+	rtl8xxxu_deinit_led(priv);
 
 	ieee80211_unregister_hw(hw);
 
