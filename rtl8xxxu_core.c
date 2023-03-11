@@ -57,6 +57,8 @@ MODULE_FIRMWARE("rtlwifi/rtl8192eu_nic.bin");
 MODULE_FIRMWARE("rtlwifi/rtl8723bu_nic.bin");
 MODULE_FIRMWARE("rtlwifi/rtl8723bu_bt.bin");
 MODULE_FIRMWARE("rtlwifi/rtl8188fufw.bin");
+MODULE_FIRMWARE("rtlwifi/rtl8710bufw_SMIC.bin");
+MODULE_FIRMWARE("rtlwifi/rtl8710bufw_UMC.bin");
 
 module_param_named(debug, rtl8xxxu_debug, int, 0600);
 MODULE_PARM_DESC(debug, "Set debug mask");
@@ -1926,8 +1928,9 @@ exit:
 static int rtl8xxxu_download_firmware(struct rtl8xxxu_priv *priv)
 {
 	int pages, remainder, i, ret;
+	u16 reg_mcu_fw_dl;
 	u8 val8;
-	u16 val16, reg_mcu_fw_dl;
+	u16 val16;
 	u32 val32;
 	u8 *fwptr;
 
@@ -4347,10 +4350,10 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
 		val32 = rtl8xxxu_read32(priv, REG_WL_RF_PSS_8710B);
 		val32 |= 0x107;
 		rtl8xxxu_write32(priv, REG_WL_RF_PSS_8710B, val32);
-
-		val32 = rtl8xxxu_read32(priv, 0xa9c);
-		priv->cck_new_agc = u32_get_bits(val32, BIT(17));
 	}
+
+	val32 = rtl8xxxu_read32(priv, 0xa9c);
+	priv->cck_new_agc = u32_get_bits(val32, BIT(17));
 
 	/* Initialise the center frequency offset tracking */
 	if (priv->fops->set_crystal_cap) {
@@ -5475,9 +5478,7 @@ void rtl8723au_rx_parse_phystats(struct rtl8xxxu_priv *priv,
 		/*
 		 * Handle PHY stats for CCK rates
 		 */
-		u8 cck_agc_rpt = phy_stats->cck_agc_rpt_ofdm_cfosho_a;
-
-		rx_status->signal = priv->fops->cck_rssi(priv, cck_agc_rpt);
+		rx_status->signal = priv->fops->cck_rssi(priv, phy_stats);
 	} else {
 		bool parse_cfo = priv->fops->set_crystal_cap &&
 				 priv->vif &&
@@ -5496,6 +5497,96 @@ void rtl8723au_rx_parse_phystats(struct rtl8xxxu_priv *priv,
 
 		rx_status->signal =
 			(phy_stats->cck_sig_qual_ofdm_pwdb_all >> 1) - 110;
+	}
+}
+
+static void jaguar2_rx_parse_phystats_type0(struct rtl8xxxu_priv *priv,
+					    struct ieee80211_rx_status *rx_status,
+					    struct jaguar2_phy_stats_type0 *phy_stats0,
+					    u32 rxmcs, struct ieee80211_hdr *hdr,
+					    bool crc_icv_err)
+{
+	s8 rx_power = phy_stats0->pwdb - 110;
+
+	if (!priv->cck_new_agc)
+		rx_power = priv->fops->cck_rssi(priv, (struct rtl8723au_phy_stats *)phy_stats0);
+
+	rx_status->signal = rx_power;
+}
+
+static void jaguar2_rx_parse_phystats_type1(struct rtl8xxxu_priv *priv,
+					    struct ieee80211_rx_status *rx_status,
+					    struct jaguar2_phy_stats_type1 *phy_stats1,
+					    u32 rxmcs, struct ieee80211_hdr *hdr,
+					    bool crc_icv_err)
+{
+	bool parse_cfo = priv->fops->set_crystal_cap &&
+			 priv->vif &&
+			 priv->vif->type == NL80211_IFTYPE_STATION &&
+			 priv->vif->cfg.assoc &&
+			 !crc_icv_err &&
+			 !ieee80211_is_ctl(hdr->frame_control) &&
+			 ether_addr_equal(priv->vif->bss_conf.bssid, hdr->addr2);
+	u8 pwdb_max = 0;
+	int rx_path;
+
+	if (parse_cfo) {
+		/* Only path-A and path-B have CFO tail and short CFO */
+		priv->cfo_tracking.cfo_tail[RF_A] = phy_stats1->cfo_tail[RF_A];
+		priv->cfo_tracking.cfo_tail[RF_B] = phy_stats1->cfo_tail[RF_B];
+
+		priv->cfo_tracking.packet_count++;
+	}
+
+	for (rx_path = 0; rx_path < priv->rx_paths; rx_path++)
+		pwdb_max = max(pwdb_max, phy_stats1->pwdb[rx_path]);
+
+	rx_status->signal = pwdb_max - 110;
+}
+
+static void jaguar2_rx_parse_phystats_type2(struct rtl8xxxu_priv *priv,
+					    struct ieee80211_rx_status *rx_status,
+					    struct jaguar2_phy_stats_type2 *phy_stats2,
+					    u32 rxmcs, struct ieee80211_hdr *hdr,
+					    bool crc_icv_err)
+{
+	u8 pwdb_max = 0;
+	int rx_path;
+
+	for (rx_path = 0; rx_path < priv->rx_paths; rx_path++)
+		pwdb_max = max(pwdb_max, phy_stats2->pwdb[rx_path]);
+
+	rx_status->signal = pwdb_max - 110;
+}
+
+void jaguar2_rx_parse_phystats(struct rtl8xxxu_priv *priv,
+			       struct ieee80211_rx_status *rx_status,
+			       struct rtl8723au_phy_stats *phy_stats,
+			       u32 rxmcs, struct ieee80211_hdr *hdr,
+			       bool crc_icv_err)
+{
+	struct jaguar2_phy_stats_type0 *phy_stats0 = (struct jaguar2_phy_stats_type0 *)phy_stats;
+	struct jaguar2_phy_stats_type1 *phy_stats1 = (struct jaguar2_phy_stats_type1 *)phy_stats;
+	struct jaguar2_phy_stats_type2 *phy_stats2 = (struct jaguar2_phy_stats_type2 *)phy_stats;
+
+	switch (phy_stats0->page_num) {
+	case 0:
+		/* CCK */
+		jaguar2_rx_parse_phystats_type0(priv, rx_status, phy_stats0,
+						rxmcs, hdr, crc_icv_err);
+		break;
+	case 1:
+		/* OFDM */
+		jaguar2_rx_parse_phystats_type1(priv, rx_status, phy_stats1,
+						rxmcs, hdr, crc_icv_err);
+		break;
+	case 2:
+		/* Also OFDM but different (how?) */
+		jaguar2_rx_parse_phystats_type2(priv, rx_status, phy_stats2,
+						rxmcs, hdr, crc_icv_err);
+		break;
+	default:
+		return;
 	}
 }
 
@@ -7095,7 +7186,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 		}
 		break;
 	case 0x7392:
-		if (id->idProduct == 0x7811 || id->idProduct == 0xa611 || id->idProduct == 0xb811)
+		if (id->idProduct == 0x7811 || id->idProduct == 0xa611)
 			untested = 0;
 		break;
 	case 0x050d:
