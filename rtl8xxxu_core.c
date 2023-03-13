@@ -7636,6 +7636,24 @@ static struct usb_driver rtl8xxxu_driver = {
 	.disable_hub_initiated_lpm = 1,
 };
 
+static int __init rtl8xxxu_module_init(void)
+{
+	int res;
+
+	res = usb_register(&rtl8xxxu_driver);
+	if (res < 0)
+		pr_err(DRIVER_NAME ": usb_register() failed (%i)\n", res);
+
+	return res;
+}
+
+static void __exit rtl8xxxu_module_exit(void)
+{
+	usb_deregister(&rtl8xxxu_driver);
+}
+
+
 MODULE_DEVICE_TABLE(usb, dev_table);
 
-module_usb_driver(rtl8xxxu_driver)
+module_init(rtl8xxxu_module_init);
+module_exit(rtl8xxxu_module_exit);
