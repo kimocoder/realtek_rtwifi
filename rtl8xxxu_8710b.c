@@ -482,7 +482,7 @@ static u32 rtl8710b_indirect_read32(struct rtl8xxxu_priv *priv, u32 addr)
 	u32 val32, value = 0xffffffff;
 	u8 polling_count = 0xff;
 
-	if (!IS_ALIGNED(addr, 4)) {
+	if (addr & 3) {
 		dev_warn(dev, "%s: Aborting because 0x%x is not a multiple of 4.\n",
 			 __func__, addr);
 		return value;
@@ -517,7 +517,7 @@ static void rtl8710b_indirect_write32(struct rtl8xxxu_priv *priv, u32 addr, u32 
 	u8 polling_count = 0xff;
 	u32 val32;
 
-	if (!IS_ALIGNED(addr, 4)) {
+	if (addr & 3) {
 		dev_warn(dev, "%s: Aborting because 0x%x is not a multiple of 4.\n",
 			 __func__, addr);
 		return;
@@ -696,7 +696,7 @@ static void rtl8710bu_config_channel(struct ieee80211_hw *hw)
 	struct rtl8xxxu_priv *priv = hw->priv;
 	bool ht40 = conf_is_ht40(&hw->conf);
 	u8 channel, subchannel = 0;
-	bool sec_ch_above = 0;
+	bool sec_ch_above;
 	u32 val32;
 	u16 val16;
 
@@ -1482,11 +1482,11 @@ static void rtl8710bu_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
 			__func__, reg_e94, reg_e9c, reg_ea4, reg_eac);
 
 		path_a_ok = true;
-
-		if (reg_e94)
-			rtl8xxxu_fill_iqk_matrix_a(priv, path_a_ok, result,
-						   candidate, (reg_ea4 == 0));
 	}
+
+	if (reg_e94 && candidate >= 0)
+		rtl8xxxu_fill_iqk_matrix_a(priv, path_a_ok, result,
+					   candidate, (reg_ea4 == 0));
 
 	rtl8xxxu_save_regs(priv, rtl8xxxu_iqk_phy_iq_bb_reg,
 			   priv->bb_recovery_backup, RTL8XXXU_BB_REGS);
