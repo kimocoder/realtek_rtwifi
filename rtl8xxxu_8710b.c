@@ -555,8 +555,8 @@ static void rtl8710b_write_syson_reg(struct rtl8xxxu_priv *priv, u32 addr, u32 v
 
 static int rtl8710b_read_efuse8(struct rtl8xxxu_priv *priv, u16 offset, u8 *data)
 {
-	u32 val32;
 	int i;
+	u32 val32;
 
 	/* Write Address */
 	rtl8xxxu_write32(priv, REG_USB_HOST_INDIRECT_ADDR_8710B, offset);
@@ -589,6 +589,7 @@ static int rtl8710bu_identify_chip(struct rtl8xxxu_priv *priv)
 	struct device *dev = &priv->udev->dev;
 	u32 cfg0, cfg2, vendor;
 	u8 package_type = 0x7; /* a nonsense value */
+	int ret = 0;
 
 	sprintf(priv->chip_name, "8710BU");
 	priv->rtl_chip = RTL8710B;
@@ -605,7 +606,7 @@ static int rtl8710bu_identify_chip(struct rtl8xxxu_priv *priv)
 		return -EOPNOTSUPP;
 	}
 
-	vendor = u32_get_bits(cfg0, 0xc0);
+	vendor = u32_get_bits(cfg0, 0xf0);
 
 	/* SMIC and TSMC are swapped compared to rtl8xxxu_identify_vendor_2bits */
 	switch (vendor) {
@@ -663,7 +664,9 @@ static int rtl8710bu_identify_chip(struct rtl8xxxu_priv *priv)
 	cfg2 = rtl8710b_read_syson_reg(priv, REG_SYS_SYSTEM_CFG2_8710B);
 	priv->rom_rev = cfg2 & 0xf;
 
-	return rtl8xxxu_config_endpoints_no_sie(priv);
+	ret = rtl8xxxu_config_endpoints_no_sie(priv);
+
+	return ret;
 }
 
 static void rtl8710b_revise_cck_tx_psf(struct rtl8xxxu_priv *priv, u8 channel)
@@ -672,21 +675,21 @@ static void rtl8710b_revise_cck_tx_psf(struct rtl8xxxu_priv *priv, u8 channel)
 		/* Normal values */
 		rtl8xxxu_write32(priv, REG_CCK0_TX_FILTER2, 0x64B80C1C);
 		rtl8xxxu_write32(priv, REG_CCK0_DEBUG_PORT, 0x00008810);
-		rtl8xxxu_write32(priv, REG_CCK0_TX_FILTER3, 0x01235667);
+		rtl8xxxu_write32(priv, 0xaac, 0x01235667);
 		/* Special value for channel 13 */
 		rtl8xxxu_write32(priv, REG_CCK0_TX_FILTER1, 0xd1d80001);
 	} else if (channel == 14) {
 		/* Special values for channel 14 */
 		rtl8xxxu_write32(priv, REG_CCK0_TX_FILTER2, 0x0000B81C);
 		rtl8xxxu_write32(priv, REG_CCK0_DEBUG_PORT, 0x00000000);
-		rtl8xxxu_write32(priv, REG_CCK0_TX_FILTER3, 0x00003667);
+		rtl8xxxu_write32(priv, 0xaac, 0x00003667);
 		/* Normal value */
 		rtl8xxxu_write32(priv, REG_CCK0_TX_FILTER1, 0xE82C0001);
 	} else {
 		/* Restore normal values from the phy init table */
 		rtl8xxxu_write32(priv, REG_CCK0_TX_FILTER2, 0x64B80C1C);
 		rtl8xxxu_write32(priv, REG_CCK0_DEBUG_PORT, 0x00008810);
-		rtl8xxxu_write32(priv, REG_CCK0_TX_FILTER3, 0x01235667);
+		rtl8xxxu_write32(priv, 0xaac, 0x01235667);
 		rtl8xxxu_write32(priv, REG_CCK0_TX_FILTER1, 0xE82C0001);
 	}
 }
@@ -712,7 +715,7 @@ static void rtl8710bu_config_channel(struct ieee80211_hw *hw)
 		subchannel = 1;
 	}
 
-	/* Set channel */
+	/* Set channel*/
 	val32 = rtl8xxxu_read_rfreg(priv, RF_A, RF6052_REG_MODE_AG);
 	u32p_replace_bits(&val32, channel, MODE_AG_CHANNEL_MASK);
 	rtl8xxxu_write_rfreg(priv, RF_A, RF6052_REG_MODE_AG, val32);
@@ -864,9 +867,9 @@ static void rtl8710bu_init_statistics(struct rtl8xxxu_priv *priv)
 static int rtl8710b_read_efuse(struct rtl8xxxu_priv *priv)
 {
 	struct device *dev = &priv->udev->dev;
+	int i, ret = 0;
 	u8 val8, word_mask, header, extheader;
 	u16 efuse_addr, offset;
-	int i, ret = 0;
 	u32 val32;
 
 	val32 = rtl8710b_read_syson_reg(priv, REG_SYS_EEPROM_CTRL0_8710B);
@@ -962,14 +965,7 @@ static int rtl8710bu_parse_efuse(struct rtl8xxxu_priv *priv)
 
 static int rtl8710bu_load_firmware(struct rtl8xxxu_priv *priv)
 {
-	if (priv->vendor_smic) {
-		return rtl8xxxu_load_firmware(priv, "rtlwifi/rtl8710bufw_SMIC.bin");
-	} else if (priv->vendor_umc) {
-		return rtl8xxxu_load_firmware(priv, "rtlwifi/rtl8710bufw_UMC.bin");
-	} else {
-		dev_err(&priv->udev->dev, "We have no suitable firmware for this chip.\n");
-		return -1;
-	}
+	return rtl8xxxu_load_firmware(priv, "rtlwifi/rtl8710bufw.bin");
 }
 
 static void rtl8710bu_init_phy_bb(struct rtl8xxxu_priv *priv)
@@ -1596,16 +1592,16 @@ static int rtl8710bu_active_to_lps(struct rtl8xxxu_priv *priv)
 	}
 
 	/* Disable CCK and OFDM, clock gated */
-	val8 = rtl8xxxu_read8(priv, REG_SYS_FUNC);
-	val8 &= ~SYS_FUNC_BBRSTB;
-	rtl8xxxu_write8(priv, REG_SYS_FUNC, val8);
+	val8 = rtl8xxxu_read8(priv, 0x02);
+	val8 &= ~BIT(0);
+	rtl8xxxu_write8(priv, 0x02, val8);
 
 	udelay(2);
 
-	/* Whole BB is reset */
-	val8 = rtl8xxxu_read8(priv, REG_SYS_FUNC);
-	val8 &= ~SYS_FUNC_BB_GLB_RSTN;
-	rtl8xxxu_write8(priv, REG_SYS_FUNC, val8);
+	/*Whole BB is reset*/
+	val8 = rtl8xxxu_read8(priv, 0x02);
+	val8 &= ~BIT(1);
+	rtl8xxxu_write8(priv, 0x02, val8);
 
 	/* Reset MAC TRX */
 	val16 = rtl8xxxu_read16(priv, REG_CR);
@@ -1614,7 +1610,7 @@ static int rtl8710bu_active_to_lps(struct rtl8xxxu_priv *priv)
 	val16 &= ~CR_SECURITY_ENABLE;
 	rtl8xxxu_write16(priv, REG_CR, val16);
 
-	/* Respond TxOK to scheduler */
+	/*Respond TxOK to scheduler*/
 	val8 = rtl8xxxu_read8(priv, REG_DUAL_TSF_RST);
 	val8 |= DUAL_TSF_TX_OK;
 	rtl8xxxu_write8(priv, REG_DUAL_TSF_RST, val8);
@@ -1799,35 +1795,104 @@ static void rtl8710b_set_crystal_cap(struct rtl8xxxu_priv *priv, u8 crystal_cap)
 	cfo->crystal_cap = crystal_cap;
 }
 
-static s8 rtl8710b_cck_rssi(struct rtl8xxxu_priv *priv, struct rtl8723au_phy_stats *phy_stats)
+static void rtl8710bu_rx_parse_phystats_type0(struct rtl8xxxu_priv *priv,
+					      struct ieee80211_rx_status *rx_status,
+					      struct jaguar2_phy_stats_type0 *phy_stats0,
+					      u32 rxmcs, struct ieee80211_hdr *hdr,
+					      bool crc_icv_err)
 {
-	struct jaguar2_phy_stats_type0 *phy_stats0 = (struct jaguar2_phy_stats_type0 *)phy_stats;
-	u8 lna_idx = (phy_stats0->lna_h << 3) | phy_stats0->lna_l;
-	u8 vga_idx = phy_stats0->vga;
-	s8 rx_pwr_all = 0x00;
+	s8 rx_power = phy_stats0->pwdb - 110;
 
-	switch (lna_idx) {
-	case 7:
-		rx_pwr_all = -52 - (2 * vga_idx);
-		break;
-	case 6:
-		rx_pwr_all = -42 - (2 * vga_idx);
-		break;
-	case 5:
-		rx_pwr_all = -36 - (2 * vga_idx);
-		break;
-	case 3:
-		rx_pwr_all = -12 - (2 * vga_idx);
-		break;
-	case 2:
-		rx_pwr_all = 0 - (2 * vga_idx);
-		break;
-	default:
-		rx_pwr_all = 0;
-		break;
+	if (!priv->cck_new_agc) {
+		u8 lna_idx = (phy_stats0->lna_h << 3) | phy_stats0->lna_l;
+		u8 vga_idx = phy_stats0->vga;
+
+		switch (lna_idx) {
+		case 7:
+			rx_power = -52 - (2 * vga_idx);
+			break;
+		case 6:
+			rx_power = -42 - (2 * vga_idx);
+			break;
+		case 5:
+			rx_power = -36 - (2 * vga_idx);
+			break;
+		case 3:
+			rx_power = -12 - (2 * vga_idx);
+			break;
+		case 2:
+			rx_power = 0 - (2 * vga_idx);
+			break;
+		default:
+			rx_power = 0;
+			break;
+		}
 	}
 
-	return rx_pwr_all;
+	rx_status->signal = rx_power;
+}
+
+static void rtl8710bu_rx_parse_phystats_type1(struct rtl8xxxu_priv *priv,
+					      struct ieee80211_rx_status *rx_status,
+					      struct jaguar2_phy_stats_type1 *phy_stats1,
+					      u32 rxmcs, struct ieee80211_hdr *hdr,
+					      bool crc_icv_err)
+{
+	bool parse_cfo = priv->fops->set_crystal_cap &&
+			 priv->vif &&
+			 priv->vif->type == NL80211_IFTYPE_STATION &&
+			 priv->vif->cfg.assoc &&
+			 !crc_icv_err &&
+			 !ieee80211_is_ctl(hdr->frame_control) &&
+			 ether_addr_equal(priv->vif->bss_conf.bssid, hdr->addr2);
+
+	if (parse_cfo) {
+		priv->cfo_tracking.cfo_tail[0] = phy_stats1->cfo_tail[0];
+
+		priv->cfo_tracking.packet_count++;
+	}
+
+	rx_status->signal = phy_stats1->pwdb[0] - 110;
+}
+
+static void rtl8710bu_rx_parse_phystats_type2(struct rtl8xxxu_priv *priv,
+					      struct ieee80211_rx_status *rx_status,
+					      struct jaguar2_phy_stats_type2 *phy_stats2,
+					      u32 rxmcs, struct ieee80211_hdr *hdr,
+					      bool crc_icv_err)
+{
+	rx_status->signal = phy_stats2->pwdb[0] - 110;
+}
+
+static void rtl8710bu_rx_parse_phystats(struct rtl8xxxu_priv *priv,
+					struct ieee80211_rx_status *rx_status,
+					struct rtl8723au_phy_stats *phy_stats,
+					u32 rxmcs, struct ieee80211_hdr *hdr,
+					bool crc_icv_err)
+{
+	struct jaguar2_phy_stats_type0 *phy_stats0 = (struct jaguar2_phy_stats_type0 *)phy_stats;
+	struct jaguar2_phy_stats_type1 *phy_stats1 = (struct jaguar2_phy_stats_type1 *)phy_stats;
+	struct jaguar2_phy_stats_type2 *phy_stats2 = (struct jaguar2_phy_stats_type2 *)phy_stats;
+
+	switch (phy_stats0->page_num) {
+	case 0:
+		/* CCK */
+		rtl8710bu_rx_parse_phystats_type0(priv, rx_status, phy_stats0,
+						  rxmcs, hdr, crc_icv_err);
+		break;
+	case 1:
+		/* OFDM */
+		rtl8710bu_rx_parse_phystats_type1(priv, rx_status, phy_stats1,
+						  rxmcs, hdr, crc_icv_err);
+		break;
+	case 2:
+		/* Also OFDM but different (how?) */
+		rtl8710bu_rx_parse_phystats_type2(priv, rx_status, phy_stats2,
+						  rxmcs, hdr, crc_icv_err);
+		break;
+	default:
+		return;
+	}
 }
 
 struct rtl8xxxu_fileops rtl8710bu_fops = {
@@ -1845,7 +1910,7 @@ struct rtl8xxxu_fileops rtl8710bu_fops = {
 	.phy_iq_calibrate = rtl8710bu_phy_iq_calibrate,
 	.config_channel = rtl8710bu_config_channel,
 	.parse_rx_desc = rtl8xxxu_parse_rxdesc24,
-	.parse_phystats = jaguar2_rx_parse_phystats,
+	.parse_phystats = rtl8710bu_rx_parse_phystats,
 	.init_aggregation = rtl8710bu_init_aggregation,
 	.init_statistics = rtl8710bu_init_statistics,
 	.init_burst = rtl8xxxu_init_burst,
@@ -1858,7 +1923,6 @@ struct rtl8xxxu_fileops rtl8710bu_fops = {
 	.report_rssi = rtl8xxxu_gen2_report_rssi,
 	.fill_txdesc = rtl8xxxu_fill_txdesc_v2,
 	.set_crystal_cap = rtl8710b_set_crystal_cap,
-	.cck_rssi = rtl8710b_cck_rssi,
 	.writeN_block_size = 4,
 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),

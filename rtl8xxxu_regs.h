@@ -1012,7 +1012,6 @@
 #define REG_CCK0_DEBUG_PORT		0x0a28	/* debug port and Tx filter3 */
 #define REG_AGC_RPT			0xa80
 #define  AGC_RPT_CCK			BIT(7)
-#define REG_CCK0_TX_FILTER3		0x0aac
 
 #define REG_CONFIG_ANT_A		0x0b68
 #define REG_CONFIG_ANT_B		0x0b6c

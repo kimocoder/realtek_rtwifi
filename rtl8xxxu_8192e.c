@@ -1742,12 +1742,11 @@ static void rtl8192e_enable_rf(struct rtl8xxxu_priv *priv)
 	rtl8xxxu_write8(priv, REG_TXPAUSE, 0x00);
 }
 
-static s8 rtl8192e_cck_rssi(struct rtl8xxxu_priv *priv, struct rtl8723au_phy_stats *phy_stats)
+static s8 rtl8192e_cck_rssi(struct rtl8xxxu_priv *priv, u8 cck_agc_rpt)
 {
 	static const s8 lna_gain_table_0[8] = {15, 9, -10, -21, -23, -27, -43, -44};
 	static const s8 lna_gain_table_1[8] = {24, 18, 13, -4, -11, -18, -31, -36};
 
-	u8 cck_agc_rpt = phy_stats->cck_agc_rpt_ofdm_cfosho_a;
 	s8 rx_pwr_all = 0x00;
 	u8 vga_idx, lna_idx;
 	s8 lna_gain = 0;

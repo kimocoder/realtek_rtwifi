@@ -104,7 +104,7 @@ enum rtl8xxxu_rtl_chip {
 	RTL8703B = 0x8703b,
 	RTL8195A = 0x8195a,
 	RTL8188F = 0x8188f,
-	RTL8710B = 0x8710b,
+	RTL8710B = 0x8710b
 };
 
 enum rtl8xxxu_rx_type {
@@ -1241,9 +1241,9 @@ struct rtl8710bu_efuse {
 	u8 res5[5];
 	u8 country_code;		/* 0x13b */
 	u8 res6[0x84];
-	u8 vid[2];			/* 0x1c0 */
-	u8 pid[2];			/* 0x1c2 */
-	u8 res7[0x3c];
+	u8 vid;				/* 0x1c0 */
+	u8 pid;				/* 0x1c2 */
+	u8 res7[0x3d];
 } __packed;
 
 struct rtl8xxxu_reg8val {
@@ -1807,7 +1807,7 @@ struct rtl8xxxu_priv {
 	int nr_out_eps;
 
 	struct mutex h2c_mutex;
-	/* Protect the indirect register accesses of RTL8710BU. */
+
 	struct mutex syson_indirect_access_mutex;
 
 	struct usb_anchor rx_anchor;
@@ -1912,7 +1912,7 @@ struct rtl8xxxu_fileops {
 			     bool short_preamble, bool ampdu_enable,
 			     u32 rts_rate);
 	void (*set_crystal_cap) (struct rtl8xxxu_priv *priv, u8 crystal_cap);
-	s8 (*cck_rssi) (struct rtl8xxxu_priv *priv, struct rtl8723au_phy_stats *phy_stats);
+	s8 (*cck_rssi) (struct rtl8xxxu_priv *priv, u8 cck_agc_rpt);
 	int (*led_classdev_brightness_set) (struct led_classdev *led_cdev,
 					    enum led_brightness brightness);
 	int writeN_block_size;
@@ -2025,11 +2025,6 @@ void rtl8723au_rx_parse_phystats(struct rtl8xxxu_priv *priv,
 				 struct rtl8723au_phy_stats *phy_stats,
 				 u32 rxmcs, struct ieee80211_hdr *hdr,
 				 bool crc_icv_err);
-void jaguar2_rx_parse_phystats(struct rtl8xxxu_priv *priv,
-			       struct ieee80211_rx_status *rx_status,
-			       struct rtl8723au_phy_stats *phy_stats,
-			       u32 rxmcs, struct ieee80211_hdr *hdr,
-			       bool crc_icv_err);
 int rtl8xxxu_gen2_channel_to_group(int channel);
 bool rtl8xxxu_simularity_compare(struct rtl8xxxu_priv *priv,
 				 int result[][8], int c1, int c2);
@@ -2055,7 +2050,7 @@ void rtl8723bu_set_ps_tdma(struct rtl8xxxu_priv *priv,
 void rtl8723bu_phy_init_antenna_selection(struct rtl8xxxu_priv *priv);
 void rtl8723a_set_crystal_cap(struct rtl8xxxu_priv *priv, u8 crystal_cap);
 void rtl8188f_set_crystal_cap(struct rtl8xxxu_priv *priv, u8 crystal_cap);
-s8 rtl8723a_cck_rssi(struct rtl8xxxu_priv *priv, struct rtl8723au_phy_stats *phy_stats);
+s8 rtl8723a_cck_rssi(struct rtl8xxxu_priv *priv, u8 cck_agc_rpt);
 void rtl8xxxu_update_ra_report(struct rtl8xxxu_ra_report *rarpt,
 			       u8 rate, u8 sgi, u8 bw);
 void rtl8188e_ra_info_init_all(struct rtl8xxxu_ra_info *ra);
