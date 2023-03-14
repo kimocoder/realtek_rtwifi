@@ -1575,11 +1575,7 @@ rtl8xxxu_set_spec_sifs(struct rtl8xxxu_priv *priv, u16 cck, u16 ofdm)
 static void rtl8xxxu_print_chipinfo(struct rtl8xxxu_priv *priv)
 {
 	struct device *dev = &priv->udev->dev;
-	char cut = '?';
-
-	/* Currently always true: chip_cut is 4 bits. */
-	if (priv->chip_cut <= 15)
-		cut = 'A' + priv->chip_cut;
+	char cut = 'A' + priv->chip_cut;
 
 	dev_info(dev,
 		 "RTL%s rev %c (%s) romver %d, %iT%iR, TX queues %i, WiFi=%i, BT=%i, GPS=%i, HI PA=%i\n",
@@ -7015,7 +7011,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 		}
 		break;
 	case 0x7392:
-		if (id->idProduct == 0x7811 || id->idProduct == 0xa611)
+		if (id->idProduct == 0x7811 || id->idProduct == 0xa611 || id->idProduct == 0xb811)
 			untested = 0;
 		break;
 	case 0x050d:
@@ -7031,7 +7027,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 			untested = 0;
 		break;
 	case 0x2357:
-		if (id->idProduct == 0x0109 || id->idProduct == 0x010c)
+		if (id->idProduct == 0x0109)
 			untested = 0;
 		break;
 	default:
@@ -7454,24 +7450,6 @@ static struct usb_driver rtl8xxxu_driver = {
 	.disable_hub_initiated_lpm = 1,
 };
 
-static int __init rtl8xxxu_module_init(void)
-{
-	int res;
-
-	res = usb_register(&rtl8xxxu_driver);
-	if (res < 0)
-		pr_err(DRIVER_NAME ": usb_register() failed (%i)\n", res);
-
-	return res;
-}
-
-static void __exit rtl8xxxu_module_exit(void)
-{
-	usb_deregister(&rtl8xxxu_driver);
-}
-
-
 MODULE_DEVICE_TABLE(usb, dev_table);
 
-module_init(rtl8xxxu_module_init);
-module_exit(rtl8xxxu_module_exit);
+module_usb_driver(rtl8xxxu_driver);
