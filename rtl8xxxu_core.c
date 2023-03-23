@@ -1104,8 +1104,25 @@ static void rtl8xxxu_stop_tx_beacon(struct rtl8xxxu_priv *priv)
 	val8 = rtl8xxxu_read8(priv, REG_TBTT_PROHIBIT + 2);
 	val8 &= ~BIT(0);
 	rtl8xxxu_write8(priv, REG_TBTT_PROHIBIT + 2, val8);
+
+	priv->beacon_enabled = false;
 }
 
+static void rtl8xxxu_start_tx_beacon(struct rtl8xxxu_priv *priv)
+{
+	u8 val8;
+
+	val8 = rtl8xxxu_read8(priv, REG_FWHW_TXQ_CTRL + 2);
+	val8 |= BIT(6);
+	rtl8xxxu_write8(priv, REG_FWHW_TXQ_CTRL + 2, val8);
+
+	rtl8xxxu_write8(priv, REG_TBTT_PROHIBIT + 1, 0x80);
+	val8 = rtl8xxxu_read8(priv, REG_TBTT_PROHIBIT + 2);
+	val8 &= 0xF0;
+	rtl8xxxu_write8(priv, REG_TBTT_PROHIBIT + 2, val8);
+
+	priv->beacon_enabled = true;
+}
 
 /*
  * The rtl8723a has 3 channel groups for it's efuse settings. It only
