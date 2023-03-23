@@ -1744,6 +1744,8 @@ struct rtl8xxxu_priv {
 	bool shutdown;
 	struct work_struct rx_urb_wq;
 
+	bool beacon_enabled;
+
 	u8 mac_addr[ETH_ALEN];
 	char chip_name[8];
 	char chip_vendor[8];
