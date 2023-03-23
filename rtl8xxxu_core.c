@@ -4912,6 +4912,17 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		dev_dbg(dev, "Changed BASIC_RATES!\n");
 		rtl8xxxu_set_basic_rates(priv, bss_conf->basic_rates);
 	}
+
+	if (changed & BSS_CHANGED_BEACON ||
+	    (changed & BSS_CHANGED_BEACON_ENABLED &&
+	     bss_conf->enable_beacon)) {
+		if (!priv->beacon_enabled) {
+			dev_dbg(dev, "BSS_CHANGED_BEACON_ENABLED\n");
+			rtl8xxxu_start_tx_beacon(priv);
+			schedule_work(&priv->update_beacon_work);
+		}
+	}
+
 error:
 	return;
 }
