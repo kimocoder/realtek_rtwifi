@@ -4523,7 +4523,7 @@ void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
 }
 
 void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
-				  u8 macid, bool connect)
+				  u8 macid, u8 role, bool connect)
 {
 	struct h2c_cmd h2c;
 
@@ -4540,7 +4540,7 @@ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
 }
 
 void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
-				  u8 macid, bool connect)
+				  u8 macid, u8 role, bool connect)
 {
 	/*
 	 * The firmware turns on the rate control when it knows it's
@@ -4555,6 +4555,9 @@ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
 		h2c.media_status_rpt.parm |= BIT(0);
 	else
 		h2c.media_status_rpt.parm &= ~BIT(0);
+
+	h2c.media_status_rpt.parm |= ((role << 4) & 0xf0);
+	h2c.media_status_rpt.macid = macid;
 
 	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
 }
@@ -4883,13 +4886,13 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 			rtl8xxxu_write16(priv, REG_BCN_PSR_RPT,
 					 0xc000 | vif->cfg.aid);
 
-			priv->fops->report_connect(priv, 0, true);
+			priv->fops->report_connect(priv, 0, H2C_ROLE_AP, true);
 		} else {
 			val8 = rtl8xxxu_read8(priv, REG_BEACON_CTRL);
 			val8 |= BEACON_DISABLE_TSF_UPDATE;
 			rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
 
-			priv->fops->report_connect(priv, 0, false);
+			priv->fops->report_connect(priv, 0, H2C_ROLE_AP, false);
 		}
 	}
 
@@ -4950,7 +4953,7 @@ static int rtl8xxxu_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	dev_dbg(dev, "Start AP mode\n");
 	rtl8xxxu_set_bssid(priv, vif->bss_conf.bssid);
 	rtl8xxxu_write16(priv, REG_BCN_INTERVAL, vif->bss_conf.beacon_int);
-	priv->fops->report_connect(priv, 0, true);
+	priv->fops->report_connect(priv, 0, 0, true);
 
 	return 0;
 }
@@ -5148,7 +5151,8 @@ void
 rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 			struct ieee80211_tx_info *tx_info,
 			struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
-			bool short_preamble, bool ampdu_enable, u32 rts_rate)
+			bool short_preamble, bool ampdu_enable, u32 rts_rate,
+			u8 macid)
 {
 	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
 	struct rtl8xxxu_priv *priv = hw->priv;
@@ -5220,7 +5224,8 @@ void
 rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 			struct ieee80211_tx_info *tx_info,
 			struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
-			bool short_preamble, bool ampdu_enable, u32 rts_rate)
+			bool short_preamble, bool ampdu_enable, u32 rts_rate,
+			u8 macid)
 {
 	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
 	struct rtl8xxxu_priv *priv = hw->priv;
@@ -5244,6 +5249,8 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 		dev_info(dev, "%s: TX rate: %d, pkt size %u\n",
 			 __func__, rate, le16_to_cpu(tx_desc40->pkt_size));
 
+	tx_desc40->txdw1 |= cpu_to_le32(macid << TXDESC40_MACID_SHIFT);
+
 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
 
 	tx_desc40->txdw4 = cpu_to_le32(rate);
@@ -5266,6 +5273,9 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 			cpu_to_le32(6 << TXDESC40_RETRY_LIMIT_SHIFT);
 		tx_desc40->txdw4 |= cpu_to_le32(TXDESC40_RETRY_LIMIT_ENABLE);
 	}
+
+	if (!ieee80211_is_data_qos(hdr->frame_control))
+		tx_desc40->txdw8 |= cpu_to_le32(TXDESC40_HW_SEQ_ENABLE);
 
 	if (short_preamble)
 		tx_desc40->txdw5 |= cpu_to_le32(TXDESC40_SHORT_PREAMBLE);
@@ -5295,7 +5305,8 @@ void
 rtl8xxxu_fill_txdesc_v3(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 			struct ieee80211_tx_info *tx_info,
 			struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
-			bool short_preamble, bool ampdu_enable, u32 rts_rate)
+			bool short_preamble, bool ampdu_enable, u32 rts_rate,
+			u8 macid)
 {
 	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
 	struct rtl8xxxu_priv *priv = hw->priv;
@@ -5394,6 +5405,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
 	u16 pktlen = skb->len;
 	u16 rate_flag = tx_info->control.rates[0].flags;
 	int tx_desc_size = priv->fops->tx_desc_size;
+	u8 macid = 0;
 	int ret;
 	bool ampdu_enable, sgi = false, short_preamble = false;
 
@@ -5493,9 +5505,11 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
 	else
 		rts_rate = 0;
 
+	if (vif->type == NL80211_IFTYPE_AP && sta)
+		macid = sta->aid + 1;
 
 	priv->fops->fill_txdesc(hw, hdr, tx_info, tx_desc, sgi, short_preamble,
-				ampdu_enable, rts_rate);
+				ampdu_enable, rts_rate, macid);
 
 	rtl8xxxu_calc_tx_desc_csum(tx_desc);
 
@@ -6583,23 +6597,24 @@ static void rtl8xxxu_configure_filter(struct ieee80211_hw *hw,
 	 * FIF_PLCPFAIL not supported?
 	 */
 
-	if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
-		rcr &= ~RCR_CHECK_BSSID_BEACON;
-	else
-		rcr |= RCR_CHECK_BSSID_BEACON;
+	if (priv->vif->type != NL80211_IFTYPE_AP) {
+		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
+			rcr &= ~(RCR_CHECK_BSSID_BEACON | RCR_CHECK_BSSID_MATCH);
+		else
+			rcr |= RCR_CHECK_BSSID_BEACON | RCR_CHECK_BSSID_MATCH;
+	} else {
+		rcr &= ~RCR_CHECK_BSSID_MATCH;
+	}
 
 	if (*total_flags & FIF_CONTROL)
 		rcr |= RCR_ACCEPT_CTRL_FRAME;
 	else
 		rcr &= ~RCR_ACCEPT_CTRL_FRAME;
 
-	if (*total_flags & FIF_OTHER_BSS) {
+	if (*total_flags & FIF_OTHER_BSS)
 		rcr |= RCR_ACCEPT_AP;
-		rcr &= ~RCR_CHECK_BSSID_MATCH;
-	} else {
+	else
 		rcr &= ~RCR_ACCEPT_AP;
-		rcr |= RCR_CHECK_BSSID_MATCH;
-	}
 
 	if (*total_flags & FIF_PSPOLL)
 		rcr |= RCR_ACCEPT_PM;
@@ -7155,6 +7170,146 @@ static void rtl8xxxu_stop(struct ieee80211_hw *hw)
 	rtl8xxxu_free_tx_resources(priv);
 }
 
+static int rtl8xxxu_sta_add(struct ieee80211_hw *hw,
+			    struct ieee80211_vif *vif,
+			    struct ieee80211_sta *sta)
+{
+	struct rtl8xxxu_priv *priv = hw->priv;
+
+	if (sta) {
+		rtl8xxxu_refresh_rate_mask(priv, 0, sta);
+		priv->fops->report_connect(priv, sta->aid + 1, H2C_ROLE_STA, true);
+	}
+	return 0;
+}
+
+#include <linux/debugfs.h>
+#include <linux/seq_file.h>
+
+struct rtl8xxxu_debugfs_priv {
+	struct rtl8xxxu_priv *priv;
+	int (*cb_read)(struct seq_file *m, void *v);
+	ssize_t (*cb_write)(struct file *filp, const char __user *buffer,
+			    size_t count, loff_t *loff);
+	u32 cb_data;
+};
+
+static int rtl8xxxu_debug_get_common(struct seq_file *m, void *v)
+{
+	struct rtl8xxxu_debugfs_priv *debugfs_priv = m->private;
+
+	return debugfs_priv->cb_read(m, v);
+}
+
+static int dl_debug_open_common(struct inode *inode, struct file *file)
+{
+	return single_open(file, rtl8xxxu_debug_get_common, inode->i_private);
+}
+
+static const struct file_operations file_ops_common = {
+	.open = dl_debug_open_common,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+static int rtl8xxxu_debug_get_macregs(struct seq_file *m, void *v)
+{
+	struct rtl8xxxu_debugfs_priv *debugfs_priv = m->private;
+	struct rtl8xxxu_priv *priv = debugfs_priv->priv;
+	int i, j = 1;
+
+	seq_printf(m, "======= MAC REG (rtl8xxxu) =======\n");
+	for (i = 0; i < 0x800; i += 4) {
+		if (j % 4 == 1)
+			seq_printf(m, "0x%03x", i);
+		seq_printf(m, " 0x%08x ", rtl8xxxu_read32(priv, i));
+		if ((j++) % 4 == 0)
+			seq_puts(m, "\n");
+	}
+	return 0;
+}
+
+static struct rtl8xxxu_debugfs_priv rtl8xxxu_debug_priv_macregs = {
+	.cb_read = rtl8xxxu_debug_get_macregs,
+	.cb_data = 0,
+};
+
+static int rtl8xxxu_debug_get_bbregs(struct seq_file *m, void *v)
+{
+	struct rtl8xxxu_debugfs_priv *debugfs_priv = m->private;
+	struct rtl8xxxu_priv *priv = debugfs_priv->priv;
+	int i, j = 1;
+
+	seq_printf(m, "======= BB REG (rtl8xxxu) =======\n");
+	for (i = 0x800; i < 0x1000; i += 4) {
+		if (j % 4 == 1)
+			seq_printf(m, "0x%03x", i);
+		seq_printf(m, " 0x%08x ", rtl8xxxu_read32(priv, i));
+		if ((j++) % 4 == 0)
+			seq_puts(m, "\n");
+	}
+	return 0;
+}
+
+static struct rtl8xxxu_debugfs_priv rtl8xxxu_debug_priv_bbregs = {
+	.cb_read = rtl8xxxu_debug_get_bbregs,
+	.cb_data = 0,
+};
+
+static int rtl8xxxu_debug_get_rfregs(struct seq_file *m, void *v)
+{
+	struct rtl8xxxu_debugfs_priv *debugfs_priv = m->private;
+	struct rtl8xxxu_priv *priv = debugfs_priv->priv;
+	int i, j = 1, path, path_nums;
+
+	if (priv->tx_paths == 1)
+		path_nums = 1;
+	else
+		path_nums = 2;
+
+	for (path = 0; path < path_nums; path++) {
+		seq_printf(m, "======= RF REG (rtl8xxxu) =======\n");
+		seq_printf(m, "RF_Path(%x)\n", path);
+		for (i = 0; i < 0x100; i++) {
+			if (j % 4 == 1)
+				seq_printf(m, "0x%02x ", i);
+			seq_printf(m, " 0x%08x ",
+				   rtl8xxxu_read_rfreg(priv, path, i));
+			if ((j++) % 4 == 0)
+				seq_puts(m, "\n");
+		}
+	}
+	return 0;
+}
+
+static struct rtl8xxxu_debugfs_priv rtl8xxxu_debug_priv_rfregs = {
+	.cb_read = rtl8xxxu_debug_get_rfregs,
+	.cb_data = 0,
+};
+
+void rtl8xxxu_debugfs_init(struct rtl8xxxu_priv *priv)
+{
+	priv->debugfs_dir =
+		debugfs_create_dir("rtl8xxxu", priv->hw->wiphy->debugfsdir);
+
+	rtl8xxxu_debug_priv_macregs.priv = priv;
+	debugfs_create_file("mac_reg_dump", S_IFREG | 0400, priv->debugfs_dir,
+			    &rtl8xxxu_debug_priv_macregs, &file_ops_common);
+	rtl8xxxu_debug_priv_bbregs.priv = priv;
+	debugfs_create_file("bb_reg_dump", S_IFREG | 0400, priv->debugfs_dir,
+			    &rtl8xxxu_debug_priv_bbregs, &file_ops_common);
+	rtl8xxxu_debug_priv_rfregs.priv = priv;
+	debugfs_create_file("rf_reg_dump", S_IFREG | 0400, priv->debugfs_dir,
+			    &rtl8xxxu_debug_priv_rfregs, &file_ops_common);
+}
+
+void rtl8xxxu_debugfs_remove(struct rtl8xxxu_priv *priv)
+{
+	debugfs_remove_recursive(priv->debugfs_dir);
+	priv->debugfs_dir = NULL;
+}
+
 static const struct ieee80211_ops rtl8xxxu_ops = {
 	.tx = rtl8xxxu_tx,
 	.add_interface = rtl8xxxu_add_interface,
@@ -7174,6 +7329,7 @@ static const struct ieee80211_ops rtl8xxxu_ops = {
 	.sta_statistics = rtl8xxxu_sta_statistics,
 	.get_antenna = rtl8xxxu_get_antenna,
 	.set_tim = rtl8xxxu_set_tim,
+	.sta_add = rtl8xxxu_sta_add,
 };
 
 static int rtl8xxxu_parse_usb(struct rtl8xxxu_priv *priv,
@@ -7418,6 +7574,8 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 	hw->wiphy->max_scan_ssids = 1;
 	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+	if (priv->fops->supports_ap)
+		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP);
 	hw->queues = 4;
 
 	sband = &rtl8xxxu_supported_band;
@@ -7471,6 +7629,8 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
 
 	rtl8xxxu_init_led(priv);
 
+	rtl8xxxu_debugfs_init(priv);
+
 	return 0;
 
 err_set_intfdata:
@@ -7497,6 +7657,8 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
 	priv = hw->priv;
 
 	rtl8xxxu_deinit_led(priv);
+
+	rtl8xxxu_debugfs_remove(priv);
 
 	ieee80211_unregister_hw(hw);
 
