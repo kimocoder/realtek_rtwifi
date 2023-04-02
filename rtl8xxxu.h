@@ -27,7 +27,7 @@
 #define RTL8XXXU_MAX_REG_POLL		500
 #define	USB_INTR_CONTENT_LENGTH		56
 
-#define RTL8XXXU_OUT_ENDPOINTS		4
+#define RTL8XXXU_OUT_ENDPOINTS		6
 
 #define REALTEK_USB_READ		0xc0
 #define REALTEK_USB_WRITE		0x40
@@ -1931,6 +1931,11 @@ struct rtl8xxxu_fileops {
 	u8 has_tx_report:1;
 	u8 gen2_thermal_meter:1;
 	u8 needs_full_init:1;
+	u8 init_reg_rxfltmap:1;
+	u8 init_reg_pkt_life_time:1;
+	u8 init_reg_hmtfr:1;
+	u8 ampdu_max_time;
+	u8 ustime_tsf_edca;
 	u8 supports_ap:1;
 	u32 adda_1t_init;
 	u32 adda_1t_path_on;
