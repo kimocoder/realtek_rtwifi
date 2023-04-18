@@ -568,6 +568,10 @@ static int rtl8188eu_parse_efuse(struct rtl8xxxu_priv *priv)
 
 	priv->default_crystal_cap = efuse->xtal_k & 0x3f;
 
+	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
+	dev_info(&priv->udev->dev, "Product: %.11s\n", efuse->device_name);
+	dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
+
 	return 0;
 }
 
@@ -1794,8 +1798,7 @@ static void rtl8188e_arfb_refresh(struct rtl8xxxu_ra_info *ra)
 
 static void
 rtl8188e_update_rate_mask(struct rtl8xxxu_priv *priv,
-			  u32 ramask, u8 rateid, int sgi, int txbw_40mhz,
-			  u8 macid)
+			  u32 ramask, u8 rateid, int sgi, int txbw_40mhz)
 {
 	struct rtl8xxxu_ra_info *ra = &priv->ra_info;
 

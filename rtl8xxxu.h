@@ -1280,9 +1280,6 @@ struct rtl8xxxu_rfregs {
 #define  H2C_JOIN_BSS_DISCONNECT	0
 #define  H2C_JOIN_BSS_CONNECT		1
 
-#define H2C_ROLE_STA			1
-#define H2C_ROLE_AP			2
-
 /*
  * H2C (firmware) commands differ between the older generation chips
  * 8188[cr]u, 819[12]cu, and 8723au, and the more recent chips 8723bu,
@@ -1747,8 +1744,6 @@ struct rtl8xxxu_priv {
 	bool shutdown;
 	struct work_struct rx_urb_wq;
 
-	bool beacon_enabled;
-
 	u8 mac_addr[ETH_ALEN];
 	char chip_name[8];
 	char chip_vendor[8];
@@ -1855,7 +1850,6 @@ struct rtl8xxxu_priv {
 	struct delayed_work ra_watchdog;
 	struct work_struct c2hcmd_work;
 	struct sk_buff_head c2hcmd_queue;
-	struct work_struct update_beacon_work;
 	struct rtl8xxxu_btcoex bt_coex;
 	struct rtl8xxxu_ra_report ra_report;
 	struct rtl8xxxu_cfo_tracking cfo_tracking;
@@ -1864,7 +1858,6 @@ struct rtl8xxxu_priv {
 	bool led_registered;
 	char led_name[32];
 	struct led_classdev led_cdev;
-	struct dentry *debugfs_dir;
 };
 
 struct rtl8xxxu_rx_urb {
@@ -1909,16 +1902,15 @@ struct rtl8xxxu_fileops {
 	void (*set_tx_power) (struct rtl8xxxu_priv *priv, int channel,
 			      bool ht40);
 	void (*update_rate_mask) (struct rtl8xxxu_priv *priv,
-				  u32 ramask, u8 rateid, int sgi, int txbw_40mhz,
-				  u8 macid);
+				  u32 ramask, u8 rateid, int sgi, int txbw_40mhz);
 	void (*report_connect) (struct rtl8xxxu_priv *priv,
-				u8 macid, u8 role, bool connect);
+				u8 macid, bool connect);
 	void (*report_rssi) (struct rtl8xxxu_priv *priv, u8 macid, u8 rssi);
 	void (*fill_txdesc) (struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 			     struct ieee80211_tx_info *tx_info,
 			     struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
 			     bool short_preamble, bool ampdu_enable,
-			     u32 rts_rate, u8 macid);
+			     u32 rts_rate);
 	void (*set_crystal_cap) (struct rtl8xxxu_priv *priv, u8 crystal_cap);
 	s8 (*cck_rssi) (struct rtl8xxxu_priv *priv, struct rtl8723au_phy_stats *phy_stats);
 	int (*led_classdev_brightness_set) (struct led_classdev *led_cdev,
@@ -1936,7 +1928,6 @@ struct rtl8xxxu_fileops {
 	u8 init_reg_hmtfr:1;
 	u8 ampdu_max_time;
 	u8 ustime_tsf_edca;
-	u8 supports_ap:1;
 	u32 adda_1t_init;
 	u32 adda_1t_path_on;
 	u32 adda_2t_path_on_a;
@@ -1962,21 +1953,10 @@ u32 rtl8xxxu_read32(struct rtl8xxxu_priv *priv, u16 addr);
 int rtl8xxxu_write8(struct rtl8xxxu_priv *priv, u16 addr, u8 val);
 int rtl8xxxu_write16(struct rtl8xxxu_priv *priv, u16 addr, u16 val);
 int rtl8xxxu_write32(struct rtl8xxxu_priv *priv, u16 addr, u32 val);
-int rtl8xxxu_write8_set(struct rtl8xxxu_priv *priv, u16 addr, u8 bits);
-int rtl8xxxu_write8_clear(struct rtl8xxxu_priv *priv, u16 addr, u8 bits);
-int rtl8xxxu_write16_set(struct rtl8xxxu_priv *priv, u16 addr, u16 bits);
-int rtl8xxxu_write16_clear(struct rtl8xxxu_priv *priv, u16 addr, u16 bits);
-int rtl8xxxu_write32_set(struct rtl8xxxu_priv *priv, u16 addr, u32 bits);
-int rtl8xxxu_write32_clear(struct rtl8xxxu_priv *priv, u16 addr, u32 bits);
-int rtl8xxxu_write32_mask(struct rtl8xxxu_priv *priv, u16 addr,
-			  u32 mask, u32 val);
 u32 rtl8xxxu_read_rfreg(struct rtl8xxxu_priv *priv,
 			enum rtl8xxxu_rfpath path, u8 reg);
 int rtl8xxxu_write_rfreg(struct rtl8xxxu_priv *priv,
 			 enum rtl8xxxu_rfpath path, u8 reg, u32 data);
-int rtl8xxxu_write_rfreg_mask(struct rtl8xxxu_priv *priv,
-			      enum rtl8xxxu_rfpath path, u8 reg,
-			      u32 mask, u32 val);
 void rtl8xxxu_save_regs(struct rtl8xxxu_priv *priv, const u32 *regs,
 			u32 *backup, int count);
 void rtl8xxxu_restore_regs(struct rtl8xxxu_priv *priv, const u32 *regs,
@@ -2029,13 +2009,13 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw);
 void rtl8xxxu_gen1_usb_quirks(struct rtl8xxxu_priv *priv);
 void rtl8xxxu_gen2_usb_quirks(struct rtl8xxxu_priv *priv);
 void rtl8xxxu_update_rate_mask(struct rtl8xxxu_priv *priv,
-			       u32 ramask, u8 rateid, int sgi, int txbw_40mhz, u8 macid);
+			       u32 ramask, u8 rateid, int sgi, int txbw_40mhz);
 void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
-				    u32 ramask, u8 rateid, int sgi, int txbw_40mhz, u8 macid);
+				    u32 ramask, u8 rateid, int sgi, int txbw_40mhz);
 void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
-				  u8 macid, u8 role, bool connect);
+				  u8 macid, bool connect);
 void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
-				  u8 macid, u8 role, bool connect);
+				  u8 macid, bool connect);
 void rtl8xxxu_gen1_report_rssi(struct rtl8xxxu_priv *priv, u8 macid, u8 rssi);
 void rtl8xxxu_gen2_report_rssi(struct rtl8xxxu_priv *priv, u8 macid, u8 rssi);
 void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv);
@@ -2064,17 +2044,17 @@ void rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 			     struct ieee80211_tx_info *tx_info,
 			     struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
 			     bool short_preamble, bool ampdu_enable,
-			     u32 rts_rate, u8 macid);
+			     u32 rts_rate);
 void rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 			     struct ieee80211_tx_info *tx_info,
 			     struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
 			     bool short_preamble, bool ampdu_enable,
-			     u32 rts_rate, u8 macid);
+			     u32 rts_rate);
 void rtl8xxxu_fill_txdesc_v3(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
 			     struct ieee80211_tx_info *tx_info,
 			     struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
 			     bool short_preamble, bool ampdu_enable,
-			     u32 rts_rate, u8 macid);
+			     u32 rts_rate);
 void rtl8723bu_set_ps_tdma(struct rtl8xxxu_priv *priv,
 			   u8 arg1, u8 arg2, u8 arg3, u8 arg4, u8 arg5);
 void rtl8723bu_phy_init_antenna_selection(struct rtl8xxxu_priv *priv);
