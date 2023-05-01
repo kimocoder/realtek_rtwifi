@@ -25,13 +25,3 @@ config RTL8XXXU
 
 	  To compile this driver as a module, choose M here: the module will
 	  be called rtl8xxxu.  If unsure, say N.
-
-config RTL8XXXU_UNTESTED
-	bool "Include support for untested Realtek 8xxx USB devices (EXPERIMENTAL)"
-	depends on RTL8XXXU
-	help
-	  This option enables detection of Realtek 8723/8188/8191/8192 WiFi
-	  USB devices which have not been tested directly by the driver
-	  author or reported to be working by third parties.
-
-	  Please report your results!

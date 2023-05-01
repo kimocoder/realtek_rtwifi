@@ -32,7 +32,6 @@
 #include "rtl8xxxu.h"
 #include "rtl8xxxu_regs.h"
 
-#ifdef CONFIG_RTL8XXXU_UNTESTED
 static struct rtl8xxxu_power_base rtl8192c_power_base = {
 	.reg_0e00 = 0x07090c0c,
 	.reg_0e04 = 0x01020405,
@@ -626,4 +625,3 @@ struct rtl8xxxu_fileops rtl8192cu_fops = {
 	.page_num_lo = TX_PAGE_NUM_LO_PQ,
 	.page_num_norm = TX_PAGE_NUM_NORM_PQ,
 };
-#endif
