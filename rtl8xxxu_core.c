@@ -4184,9 +4184,6 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
 	if (priv->rtl_chip == RTL8192E) {
 		rtl8xxxu_write32(priv, REG_HIMR0, 0x00);
 		rtl8xxxu_write32(priv, REG_HIMR1, 0x00);
-	} else if (priv->rtl_chip == RTL8188F) {
-		rtl8xxxu_write32(priv, REG_HISR0, 0xffffffff);
-		rtl8xxxu_write32(priv, REG_HISR1, 0xffffffff);
 	} else if (priv->rtl_chip == RTL8188E) {
 		rtl8xxxu_write32(priv, REG_HISR0, 0xffffffff);
 		val32 = IMR0_PSTIMEOUT | IMR0_TBDER | IMR0_CPWM | IMR0_CPWM2;
@@ -4198,7 +4195,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
 		rtl8xxxu_write8(priv, REG_USB_SPECIAL_OPTION, val8);
 	} else if (priv->rtl_chip == RTL8710B) {
 		rtl8xxxu_write32(priv, REG_HIMR0_8710B, 0);
-	} else {
+	} else if (priv->rtl_chip != RTL8188F) {
 		/*
 		 * Enable all interrupts - not obvious USB needs to do this
 		 */
@@ -6452,7 +6449,6 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
 cleanup:
 	usb_free_urb(urb);
 	dev_kfree_skb(skb);
-	return;
 }
 
 static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
